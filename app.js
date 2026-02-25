@@ -72,7 +72,7 @@ app.use(errorsController.pageNotFound);
 
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect(DB_PATH).then(() => {
+mongoose.connect(process.env.MONGODB_URI || DB_PATH).then(() => {
   console.log('Connected to Mongo');
   app.listen(PORT, () => {
     console.log(`Server running on address http://localhost:${PORT}`);
