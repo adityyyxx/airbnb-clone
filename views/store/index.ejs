@@ -1,0 +1,218 @@
+<%- include('../partials/head') %>
+  </head>
+
+  <body>
+    <%- include('../partials/nav') %>
+
+      <div class="page-container" style="padding-top:24px;">
+
+        <!-- Section 1: Popular Homes -->
+        <div class="listing-section animate-fade-in">
+          <div class="listing-section-header">
+            <h2 class="listing-section-title">
+              Popular homes in your area
+              <a href="/homes" class="arrow-link">→</a>
+            </h2>
+            <div style="display:flex;gap:6px;">
+              <button class="scroll-arrow scroll-arrow-static"
+                onclick="document.getElementById('row1').scrollBy({left:-260,behavior:'smooth'})"
+                style="position:static;transform:none;border:1px solid var(--border);width:32px;height:32px;border-radius:50%;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button class="scroll-arrow scroll-arrow-static"
+                onclick="document.getElementById('row1').scrollBy({left:260,behavior:'smooth'})"
+                style="position:static;transform:none;border:1px solid var(--border);width:32px;height:32px;border-radius:50%;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="scroll-row-wrapper">
+            <div class="scroll-row" id="row1">
+              <% registeredHomes.forEach((home, index)=> { %>
+                <a href="/homes/<%= home._id %>" class="listing-card">
+                  <div class="listing-card-image">
+                    <% if (home.photoUrl) { %>
+                      <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" />
+                      <% } else { %>
+                        <div
+                          style="width:100%;height:100%;background:linear-gradient(135deg,#f0f0f0,#e0e0e0);display:flex;align-items:center;justify-content:center;color:#b0b0b0;font-size:0.8rem;">
+                          No image</div>
+                        <% } %>
+                          <% if (home.rating>= 4.5) { %>
+                            <span class="guest-fav-badge">Guest favourite</span>
+                            <% } %>
+                              <div class="listing-card-heart" onclick="event.preventDefault();event.stopPropagation();">
+                                <button class="heart-btn" onclick="event.preventDefault();event.stopPropagation();">
+                                  <svg viewBox="0 0 24 24">
+                                    <path
+                                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                  </svg>
+                                </button>
+                              </div>
+                  </div>
+                  <div class="listing-card-info">
+                    <div class="listing-card-title">
+                      <%= home.houseName %>
+                    </div>
+                    <div class="listing-card-meta">
+                      ₹<%= home.price.toLocaleString() %> for 2 nights
+                        &nbsp;·&nbsp;
+                        <span class="star">
+                          <svg viewBox="0 0 24 24">
+                            <path
+                              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                          <%= home.rating %>
+                        </span>
+                    </div>
+                  </div>
+                </a>
+                <% }) %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Available this weekend -->
+        <div class="listing-section animate-fade-in-up stagger-2">
+          <div class="listing-section-header">
+            <h2 class="listing-section-title">
+              Available this weekend
+              <a href="/homes" class="arrow-link">→</a>
+            </h2>
+            <div style="display:flex;gap:6px;">
+              <button onclick="document.getElementById('row2').scrollBy({left:-260,behavior:'smooth'})"
+                style="border:1px solid var(--border);width:32px;height:32px;border-radius:50%;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button onclick="document.getElementById('row2').scrollBy({left:260,behavior:'smooth'})"
+                style="border:1px solid var(--border);width:32px;height:32px;border-radius:50%;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="scroll-row-wrapper">
+            <div class="scroll-row" id="row2">
+              <% registeredHomes.slice().reverse().forEach((home, index)=> { %>
+                <a href="/homes/<%= home._id %>" class="listing-card">
+                  <div class="listing-card-image">
+                    <% if (home.photoUrl) { %>
+                      <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" />
+                      <% } else { %>
+                        <div
+                          style="width:100%;height:100%;background:linear-gradient(135deg,#f0f0f0,#e0e0e0);display:flex;align-items:center;justify-content:center;color:#b0b0b0;font-size:0.8rem;">
+                          No image</div>
+                        <% } %>
+                          <span class="guest-fav-badge">Guest favourite</span>
+                          <div class="listing-card-heart" onclick="event.preventDefault();event.stopPropagation();">
+                            <button class="heart-btn" onclick="event.preventDefault();event.stopPropagation();">
+                              <svg viewBox="0 0 24 24">
+                                <path
+                                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                              </svg>
+                            </button>
+                          </div>
+                  </div>
+                  <div class="listing-card-info">
+                    <div class="listing-card-title">
+                      <%= home.houseName %>
+                    </div>
+                    <div class="listing-card-meta">
+                      ₹<%= home.price.toLocaleString() %> for 2 nights
+                        &nbsp;·&nbsp;
+                        <span class="star">
+                          <svg viewBox="0 0 24 24">
+                            <path
+                              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                          <%= home.rating %>
+                        </span>
+                    </div>
+                  </div>
+                </a>
+                <% }) %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Top-rated stays -->
+        <div class="listing-section animate-fade-in-up stagger-4">
+          <div class="listing-section-header">
+            <h2 class="listing-section-title">
+              Top-rated stays
+              <a href="/homes" class="arrow-link">→</a>
+            </h2>
+            <div style="display:flex;gap:6px;">
+              <button onclick="document.getElementById('row3').scrollBy({left:-260,behavior:'smooth'})"
+                style="border:1px solid var(--border);width:32px;height:32px;border-radius:50%;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button onclick="document.getElementById('row3').scrollBy({left:260,behavior:'smooth'})"
+                style="border:1px solid var(--border);width:32px;height:32px;border-radius:50%;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="scroll-row-wrapper">
+            <div class="scroll-row" id="row3">
+              <% registeredHomes.forEach((home, index)=> { %>
+                <a href="/homes/<%= home._id %>" class="listing-card">
+                  <div class="listing-card-image">
+                    <% if (home.photoUrl) { %>
+                      <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" />
+                      <% } else { %>
+                        <div
+                          style="width:100%;height:100%;background:linear-gradient(135deg,#f0f0f0,#e0e0e0);display:flex;align-items:center;justify-content:center;color:#b0b0b0;font-size:0.8rem;">
+                          No image</div>
+                        <% } %>
+                          <% if (home.rating>= 4.5) { %>
+                            <span class="guest-fav-badge">Guest favourite</span>
+                            <% } %>
+                              <div class="listing-card-heart" onclick="event.preventDefault();event.stopPropagation();">
+                                <button class="heart-btn" onclick="event.preventDefault();event.stopPropagation();">
+                                  <svg viewBox="0 0 24 24">
+                                    <path
+                                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                  </svg>
+                                </button>
+                              </div>
+                  </div>
+                  <div class="listing-card-info">
+                    <div class="listing-card-title">
+                      <%= home.houseName %>
+                    </div>
+                    <div class="listing-card-meta">
+                      ₹<%= home.price.toLocaleString() %> for 2 nights
+                        &nbsp;·&nbsp;
+                        <span class="star">
+                          <svg viewBox="0 0 24 24">
+                            <path
+                              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                          <%= home.rating %>
+                        </span>
+                    </div>
+                  </div>
+                </a>
+                <% }) %>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <%- include('../partials/footer') %>
+  </body>
+
+  </html>

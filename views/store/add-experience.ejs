@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Experience</title>
+    <link rel="stylesheet" href="/home.css" />
+</head>
+
+<body>
+    <% include ../partials/nav %>
+        <main class="container">
+            <h1 class="page-title">Add a New Experience</h1>
+            <form action="/experiences/add" method="POST" class="experience-form">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required />
+                </div>
+                <div class="form-group">
+                    <label for="host">Host</label>
+                    <input type="text" id="host" name="host" required />
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="Adventure">Adventure</option>
+                        <option value="Food &amp; Drink">Food &amp; Drink</option>
+                        <option value="Art &amp; Culture">Art &amp; Culture</option>
+                        <option value="Wellness">Wellness</option>
+                        <option value="Nature">Nature</option>
+                        <option value="Music">Music</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Nightlife">Nightlife</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="price">Price (₹)</label>
+                    <input type="number" id="price" name="price" step="0.01" required />
+                </div>
+                <div class="form-group">
+                    <label for="duration">Duration (hours)</label>
+                    <input type="number" id="duration" name="duration" step="0.5" required />
+                </div>
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" required />
+                </div>
+                <div class="form-group">
+                    <label for="rating">Rating (1-5)</label>
+                    <input type="number" id="rating" name="rating" min="1" max="5" step="0.1" required />
+                </div>
+                <div class="form-group">
+                    <label for="photoUrl">Photo URL</label>
+                    <input type="url" id="photoUrl" name="photoUrl" required />
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="maxGuests">Max Guests</label>
+                    <input type="number" id="maxGuests" name="maxGuests" required />
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="isPopular" name="isPopular" />
+                    <label for="isPopular">Mark as Popular</label>
+                </div>
+                <button type="submit" class="btn-primary">Add Experience</button>
+            </form>
+        </main>
+        <% include ../partials/footer %>
+</body>
+
+</html>

@@ -1,0 +1,77 @@
+<%- include('../partials/head') %>
+  </head>
+
+  <body>
+    <%- include('../partials/nav') %>
+
+      <div class="page-container">
+        <div class="page-header">
+          <h2 class="page-title">Your wishlist</h2>
+          <p class="page-subtitle">
+            <%= favouriteHomes.length %> saved home<%= favouriteHomes.length !==1 ? 's' : '' %>
+          </p>
+        </div>
+
+        <% if (favouriteHomes && favouriteHomes.length> 0) { %>
+          <div class="grid grid-4">
+            <% favouriteHomes.forEach((home, index)=> { %>
+              <div class="card animate-fade-in-up stagger-<%= (index % 6) + 1 %>">
+                <div class="card-image-wrapper">
+                  <% if (home.photoUrl) { %>
+                    <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>">
+                    <% } else { %>
+                      <div class="no-image">No image available</div>
+                      <% } %>
+                        <div class="card-heart">
+                          <form action="/favourites/delete/<%= home._id %>" method="POST">
+                            <button type="submit" class="heart-btn filled" title="Remove from Wishlist">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2">
+                                <path
+                                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                              </svg>
+                            </button>
+                          </form>
+                        </div>
+                </div>
+                <div class="card-body">
+                  <div class="card-title">
+                    <%= home.houseName %>
+                  </div>
+                  <div class="card-location">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <%= home.location %>
+                  </div>
+                  <div class="card-meta">
+                    <div class="card-price">₹<%= home.price.toLocaleString() %> <span>/ night</span></div>
+                    <div class="card-rating">
+                      <svg viewBox="0 0 24 24">
+                        <path
+                          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      <%= home.rating %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <% }) %>
+          </div>
+          <% } else { %>
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path
+                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              <h3>Create your first wishlist</h3>
+              <p>As you search, tap the heart icon to save your favorite places to stay.</p>
+              <a href="/homes" class="btn btn-primary">Start exploring</a>
+            </div>
+            <% } %>
+      </div>
+
+      <%- include('../partials/footer') %>
+  </body>
+
+  </html>

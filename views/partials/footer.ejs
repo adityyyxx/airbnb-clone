@@ -1,0 +1,151 @@
+<footer class="site-footer">
+    <!-- Inspiration Section -->
+    <div class="footer-inspiration">
+        <h2 class="footer-inspiration-title">Inspiration for future getaways</h2>
+        <div class="footer-tabs" id="footerTabs">
+            <button class="footer-tab active" onclick="switchFooterTab(this, 'popular')">Popular</button>
+            <button class="footer-tab" onclick="switchFooterTab(this, 'arts')">Arts & culture</button>
+            <button class="footer-tab" onclick="switchFooterTab(this, 'beach')">Beach</button>
+            <button class="footer-tab" onclick="switchFooterTab(this, 'mountains')">Mountains</button>
+            <button class="footer-tab" onclick="switchFooterTab(this, 'outdoors')">Outdoors</button>
+            <button class="footer-tab" onclick="switchFooterTab(this, 'things')">Things to do</button>
+        </div>
+
+        <div class="footer-destinations" id="footerDestinations">
+            <!-- Popular -->
+            <div class="dest-grid active" data-tab="popular">
+                <a href="/homes" class="dest-item"><strong>Goa</strong><span>Beach rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Manali</strong><span>Mountain rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Jaipur</strong><span>Heritage rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Udaipur</strong><span>Lakeside rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Mumbai</strong><span>Flat rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Kerala</strong><span>Houseboat rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Shimla</strong><span>Holiday rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Rishikesh</strong><span>Cabin rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Darjeeling</strong><span>Homestay rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Ooty</strong><span>Villa rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Pondicherry</strong><span>Cottage rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Coorg</strong><span>Estate rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Jaisalmer</strong><span>Desert camping</span></a>
+                <a href="/homes" class="dest-item"><strong>Wayanad</strong><span>Treehouse rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Kasol</strong><span>Mountain rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Alleppey</strong><span>Backwater stays</span></a>
+                <a href="/homes" class="dest-item"><strong>Mussoorie</strong><span>Hill station stays</span></a>
+                <a href="/homes" class="dest-item"><strong>Lonavala</strong><span>Weekend getaways</span></a>
+            </div>
+            <!-- Arts -->
+            <div class="dest-grid" data-tab="arts">
+                <a href="/homes" class="dest-item"><strong>Jaipur</strong><span>Palace tours</span></a>
+                <a href="/homes" class="dest-item"><strong>Varanasi</strong><span>Cultural stays</span></a>
+                <a href="/homes" class="dest-item"><strong>Udaipur</strong><span>Art workshops</span></a>
+                <a href="/homes" class="dest-item"><strong>Jodhpur</strong><span>Heritage walks</span></a>
+                <a href="/homes" class="dest-item"><strong>Hampi</strong><span>Temple rentals</span></a>
+                <a href="/homes" class="dest-item"><strong>Mysore</strong><span>Palace stays</span></a>
+            </div>
+            <!-- Beach -->
+            <div class="dest-grid" data-tab="beach">
+                <a href="/homes" class="dest-item"><strong>Goa</strong><span>Beachfront villas</span></a>
+                <a href="/homes" class="dest-item"><strong>Pondicherry</strong><span>Seaside cottages</span></a>
+                <a href="/homes" class="dest-item"><strong>Gokarna</strong><span>Beach huts</span></a>
+                <a href="/homes" class="dest-item"><strong>Kovalam</strong><span>Ocean view stays</span></a>
+                <a href="/homes" class="dest-item"><strong>Andaman</strong><span>Island resorts</span></a>
+                <a href="/homes" class="dest-item"><strong>Alibaug</strong><span>Beach rentals</span></a>
+            </div>
+            <!-- Mountains -->
+            <div class="dest-grid" data-tab="mountains">
+                <a href="/homes" class="dest-item"><strong>Manali</strong><span>Snow cabins</span></a>
+                <a href="/homes" class="dest-item"><strong>Shimla</strong><span>Hill lodges</span></a>
+                <a href="/homes" class="dest-item"><strong>Leh Ladakh</strong><span>Mountain camps</span></a>
+                <a href="/homes" class="dest-item"><strong>Darjeeling</strong><span>Tea garden stays</span></a>
+                <a href="/homes" class="dest-item"><strong>Mussoorie</strong><span>Colonial bungalows</span></a>
+                <a href="/homes" class="dest-item"><strong>Nainital</strong><span>Lakeside cottages</span></a>
+            </div>
+            <!-- Outdoors -->
+            <div class="dest-grid" data-tab="outdoors">
+                <a href="/homes" class="dest-item"><strong>Rishikesh</strong><span>River camping</span></a>
+                <a href="/homes" class="dest-item"><strong>Coorg</strong><span>Plantation stays</span></a>
+                <a href="/homes" class="dest-item"><strong>Jim Corbett</strong><span>Safari lodges</span></a>
+                <a href="/homes" class="dest-item"><strong>Spiti Valley</strong><span>Adventure camps</span></a>
+                <a href="/homes" class="dest-item"><strong>Meghalaya</strong><span>Eco stays</span></a>
+                <a href="/homes" class="dest-item"><strong>Ranthambore</strong><span>Wildlife resorts</span></a>
+            </div>
+            <!-- Things to do -->
+            <div class="dest-grid" data-tab="things">
+                <a href="/homes" class="dest-item"><strong>Jaipur</strong><span>Heritage walks</span></a>
+                <a href="/homes" class="dest-item"><strong>Delhi</strong><span>Food tours</span></a>
+                <a href="/homes" class="dest-item"><strong>Agra</strong><span>Taj Mahal visits</span></a>
+                <a href="/homes" class="dest-item"><strong>Varanasi</strong><span>Ganga Aarti</span></a>
+                <a href="/homes" class="dest-item"><strong>Hampi</strong><span>Ruins exploration</span></a>
+                <a href="/homes" class="dest-item"><strong>Kerala</strong><span>Ayurveda retreats</span></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Links -->
+    <div class="footer-bottom">
+        <div class="footer-columns">
+            <div class="footer-col">
+                <h4>Support</h4>
+                <a href="#">Help Centre</a>
+                <a href="#">Get help with a safety issue</a>
+                <a href="#">AirCover</a>
+                <a href="#">Anti-discrimination</a>
+                <a href="#">Disability support</a>
+                <a href="#">Cancellation options</a>
+                <a href="#">Report neighbourhood concern</a>
+            </div>
+            <div class="footer-col">
+                <h4>Hosting</h4>
+                <a href="#">Airbnb your home</a>
+                <a href="#">Airbnb your experience</a>
+                <a href="#">AirCover for Hosts</a>
+                <a href="#">Hosting resources</a>
+                <a href="#">Community forum</a>
+                <a href="#">Hosting responsibly</a>
+            </div>
+            <div class="footer-col">
+                <h4>Airbnb</h4>
+                <a href="#">2025 Summer Release</a>
+                <a href="#">Newsroom</a>
+                <a href="#">New features</a>
+                <a href="#">Careers</a>
+                <a href="#">Investors</a>
+                <a href="#">Gift cards</a>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="footer-bar">
+            <div class="footer-bar-left">
+                <span>© 2025 Airbnb, Inc.</span>
+                <span>·</span>
+                <a href="#">Terms</a>
+                <span>·</span>
+                <a href="#">Sitemap</a>
+                <span>·</span>
+                <a href="#">Privacy</a>
+            </div>
+            <div class="footer-bar-right">
+                <a href="#" style="display:flex; align-items:center; gap:4px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
+                    English (IN)
+                </a>
+                <span>₹ INR</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    function switchFooterTab(btn, tabName) {
+        document.querySelectorAll('.footer-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.dest-grid').forEach(g => g.classList.remove('active'));
+        document.querySelector('.dest-grid[data-tab="' + tabName + '"]').classList.add('active');
+    }
+</script>
