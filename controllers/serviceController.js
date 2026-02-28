@@ -1,7 +1,7 @@
 const Service = require("../models/service");
 
 exports.getServices = (req, res, next) => {
-  Service.find().then((services) => {
+  Service.find().lean().then((services) => {
     // Group by category
     const categories = {};
     const categoryOrder = ['Photography', 'Chefs', 'Massage', 'Training', 'Make-up', 'Hair', 'Spa treatments', 'Catering', 'Nails', 'Prepared meals'];

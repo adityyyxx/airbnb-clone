@@ -3,6 +3,7 @@ const path = require('path');
 
 // External Module
 const express = require('express');
+const compression = require('compression');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const DB_PATH = "mongodb+srv://root:aditya123@keepcoding.xp3rkci.mongodb.net/?retryWrites=true&w=majority&appName=KeepCoding";
@@ -19,6 +20,17 @@ const { default: mongoose } = require('mongoose');
 
 const app = express();
 require('dotenv').config();
+
+// Gzip compress all responses for faster transfers
+app.use(compression());
+
+// Serve static files FIRST — before session/auth middleware
+// so CSS, images, etc. skip expensive DB session lookups
+// Cache for 1 day so browser doesn't re-download on tab switches
+app.use(express.static(path.join(rootDir, 'public'), {
+  maxAge: '1d',
+  etag: true
+}));
 const passport = require('./utils/passport-config');
 
 app.set('view engine', 'ejs');
@@ -66,7 +78,7 @@ app.use("/host", (req, res, next) => {
 });
 app.use("/host", hostRouter);
 
-app.use(express.static(path.join(rootDir, 'public')))
+// express.static moved above session middleware for performance
 
 app.use(errorsController.pageNotFound);
 

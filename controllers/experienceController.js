@@ -1,7 +1,7 @@
 const Experience = require("../models/experience");
 
 exports.getExperiences = (req, res, next) => {
-  Experience.find().then((experiences) => {
+  Experience.find().lean().then((experiences) => {
     // Group by category
     const categories = {};
     const categoryOrder = [

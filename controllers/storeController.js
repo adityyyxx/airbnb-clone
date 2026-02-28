@@ -3,8 +3,7 @@ const Home = require("../models/home");
 const Booking = require("../models/booking");
 
 exports.getIndex = (req, res, next) => {
-  console.log("Session Value: ", req.session);
-  Home.find().then((registeredHomes) => {
+  Home.find().lean().then((registeredHomes) => {
     res.render("store/index", {
       registeredHomes: registeredHomes,
       pageTitle: "airbnb Home",
@@ -15,7 +14,7 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getHomes = (req, res, next) => {
-  Home.find().then((registeredHomes) => {
+  Home.find().lean().then((registeredHomes) => {
     res.render("store/home-list", {
       registeredHomes: registeredHomes,
       pageTitle: "Homes List",
@@ -28,6 +27,7 @@ exports.getHomes = (req, res, next) => {
 exports.getBookings = (req, res, next) => {
   Booking.find()
     .populate('houseId')
+    .lean()
     .then((bookings) => {
       res.render("store/bookings", {
         bookings: bookings,
@@ -72,6 +72,7 @@ exports.postRemoveBooking = (req, res, next) => {
 exports.getFavouriteList = (req, res, next) => {
   Favourite.find()
   .populate('houseId')
+  .lean()
   .then((favourites) => {
     const favouriteHomes = favourites.map((fav) => fav.houseId);
     res.render("store/favourite-list", {
@@ -116,7 +117,7 @@ exports.postRemoveFromFavourite = (req, res, next) => {
 
 exports.getHomeDetails = (req, res, next) => {
   const homeId = req.params.homeId;
-  Home.findById(homeId).then((home) => {
+  Home.findById(homeId).lean().then((home) => {
     if (!home) {
       console.log("Home not found");
       res.redirect("/homes");
