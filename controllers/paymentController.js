@@ -100,6 +100,36 @@ exports.createOrder = async (req, res) => {
     const totalAmount = nightCount * pricePerNight;
     const amountInPaise = Math.round(totalAmount * 100);
 
+    const idempotencyKey = req.headers['idempotency-key'] || req.headers['x-idempotency-key'];
+    if (idempotencyKey) {
+      const existingTx = await PaymentTransaction.findOne({ idempotencyKey, userId });
+      if (existingTx) {
+        const existingBooking = await Booking.findById(existingTx.bookingId).populate('houseId');
+        if (existingBooking) {
+          const user = await User.findById(userId).lean();
+          return res.status(200).json({
+            success: true,
+            message: 'Existing order retrieved via Idempotency-Key.',
+            keyId: process.env.RAZORPAY_KEY_ID,
+            orderId: existingTx.razorpayOrderId,
+            amount: Math.round(existingTx.amount * 100),
+            currency: existingTx.currency,
+            bookingId: existingBooking._id,
+            propertyDetails: {
+              houseName: existingBooking.houseId?.houseName || '',
+              nightCount: existingBooking.nightCount,
+              pricePerNight: existingBooking.pricePerNight,
+              totalAmount: existingBooking.totalAmount
+            },
+            prefill: {
+              name: user?.username || '',
+              email: user?.email || ''
+            }
+          });
+        }
+      }
+    }
+
     // Create a pending Booking in DB
     const booking = new Booking({
       houseId: home._id,
@@ -146,7 +176,7 @@ exports.createOrder = async (req, res) => {
       amount: totalAmount,
       currency: 'INR',
       status: 'created',
-      idempotencyKey: razorpayOrder.id
+      idempotencyKey: idempotencyKey || razorpayOrder.id
     });
     await transaction.save();
 
@@ -409,8 +439,10 @@ exports.handleWebhook = async (req, res) => {
           : await Booking.findOne({ razorpayOrderId: orderId });
 
         if (booking) {
-          booking.status = 'confirmed';
-          booking.paymentStatus = 'paid';
+          if (booking.status !== 'cancelled') {
+            booking.status = 'confirmed';
+            booking.paymentStatus = 'paid';
+          }
           if (paymentId) booking.razorpayPaymentId = paymentId;
           
           if (useTransactions) {

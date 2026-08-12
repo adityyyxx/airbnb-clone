@@ -47,36 +47,11 @@ exports.getBookings = async (req, res, next) => {
 };
 
 exports.postAddBooking = async (req, res, next) => {
-  try {
-    const { houseId, checkIn, checkOut, guests } = req.body;
-    const home = await Home.findById(houseId);
-    if (!home) return res.redirect("/homes");
-
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
-    const diffDays = Math.max(1, Math.round((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
-    const totalAmount = diffDays * home.price;
-
-    const booking = new Booking({
-      houseId,
-      userId: req.session.userId,
-      checkIn: checkInDate,
-      checkOut: checkOutDate,
-      guests: parseInt(guests) || 1,
-      nightCount: diffDays,
-      pricePerNight: home.price,
-      totalAmount: totalAmount,
-      status: 'confirmed',
-      paymentStatus: 'paid'
-    });
-
-    await booking.save();
-    console.log("Booking created successfully");
-    res.redirect("/bookings");
-  } catch (err) {
-    console.log("Error while creating booking: ", err);
-    res.redirect("/bookings");
+  const { houseId } = req.body;
+  if (houseId) {
+    return res.redirect(`/homes/${houseId}`);
   }
+  return res.redirect('/homes');
 };
 
 exports.postRemoveBooking = (req, res, next) => {
