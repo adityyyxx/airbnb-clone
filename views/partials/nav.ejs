@@ -80,8 +80,21 @@
                   </form>
                 </li>
                 <% } else { %>
-                  <li>
+                  <li class="desktop-auth-item">
                     <a href="/login" class="nav-auth-btn" style="background:#FF385C;">Sign in</a>
+                  </li>
+                  <li class="mobile-menu-item-wrapper" style="display:none;">
+                    <button type="button" class="mobile-hamburger-btn" id="mobileMenuBtn" onclick="toggleMobileMenu(event)" aria-label="Open menu" style="display:none;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                      </svg>
+                    </button>
+                    <div class="mobile-dropdown-menu" id="mobileDropdownMenu" style="display:none;">
+                      <a href="#help" onclick="scrollToHelp()" class="mobile-dropdown-link">Help Centre</a>
+                      <a href="/login" class="mobile-dropdown-link">Log in / Sign up</a>
+                    </div>
                   </li>
                   <% } %>
     </ul>
@@ -263,4 +276,29 @@
       });
     </script>
     <% } %>
+
+  <script>
+    function toggleMobileMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('mobileDropdownMenu');
+      if (menu) menu.classList.toggle('open');
+    }
+
+    function scrollToHelp() {
+      const menu = document.getElementById('mobileDropdownMenu');
+      if (menu) menu.classList.remove('open');
+      const footer = document.querySelector('footer');
+      if (footer) {
+        footer.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    document.addEventListener('click', function (e) {
+      const menu = document.getElementById('mobileDropdownMenu');
+      const btn = document.getElementById('mobileMenuBtn');
+      if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+        menu.classList.remove('open');
+      }
+    });
+  </script>
 </header>

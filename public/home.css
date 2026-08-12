@@ -331,6 +331,19 @@ select {
   box-shadow: 0 4px 12px var(--primary-glow);
 }
 
+/* ── Mobile Hamburger Menu (Desktop Default: Hidden) ── */
+.desktop-auth-item {
+  display: flex !important;
+  align-items: center;
+}
+
+.mobile-menu-item-wrapper,
+.mobile-menu-wrapper,
+.mobile-hamburger-btn,
+.mobile-dropdown-menu {
+  display: none !important;
+}
+
 /* ── Cards ── */
 .card {
   background: var(--bg-primary);
@@ -1973,8 +1986,70 @@ html, body {
     flex-wrap: nowrap !important;
   }
 
-  .nav-hide-mobile {
+  .nav-hide-mobile,
+  .desktop-auth-item,
+  .desktop-only-auth {
     display: none !important;
+  }
+
+  .mobile-menu-item-wrapper,
+  .mobile-menu-wrapper {
+    display: block !important;
+    position: relative !important;
+  }
+
+  .mobile-hamburger-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    border: 1px solid var(--border-light) !important;
+    background: #ffffff !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+    padding: 0 !important;
+  }
+
+  .mobile-dropdown-menu {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    width: 190px !important;
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid var(--border-light) !important;
+    padding: 8px 0 !important;
+    z-index: 9999 !important;
+    display: none !important;
+    flex-direction: column !important;
+  }
+
+  .mobile-dropdown-menu.open {
+    display: flex !important;
+  }
+
+  .mobile-dropdown-link {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 12px 18px !important;
+    font-size: 0.9375rem !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+    transition: background-color 0.15s ease !important;
+    line-height: 1.4 !important;
+    white-space: nowrap !important;
+  }
+
+  .mobile-dropdown-link:hover,
+  .mobile-dropdown-link:active {
+    background: var(--bg-secondary) !important;
   }
 
   .nav-user-text {
