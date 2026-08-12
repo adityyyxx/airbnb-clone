@@ -1,4 +1,49 @@
 <%- include('../partials/head') %>
+    <!-- Razorpay Checkout SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        .price-breakdown {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            display: none;
+        }
+        .price-breakdown.active {
+            display: block;
+        }
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .price-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .badge-secure {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 14px;
+            font-size: 0.8125rem;
+            color: #059669;
+            font-weight: 500;
+        }
+        .btn-loading {
+            opacity: 0.7;
+            pointer-events: none;
+            position: relative;
+        }
+    </style>
     </head>
 
     <body>
@@ -122,7 +167,7 @@
                     <div class="animate-fade-in-up stagger-2">
                         <div class="booking-card">
                             <div class="booking-card-price">
-                                ₹<%= home.price.toLocaleString() %> <span>/ night</span>
+                                ₹<span id="nightlyRateDisplay"><%= home.price.toLocaleString() %></span> <span>/ night</span>
                             </div>
 
                             <div style="display:flex; align-items:center; gap:6px; margin-bottom:20px;">
@@ -137,8 +182,8 @@
                             </div>
 
                             <% if (isLoggedIn) { %>
-                                <form action="/bookings" method="POST">
-                                    <input type="hidden" name="houseId" value="<%= home._id %>" />
+                                <form id="bookingPaymentForm" onsubmit="event.preventDefault(); initiateRazorpayBooking();">
+                                    <input type="hidden" id="houseId" value="<%= home._id %>" />
 
                                     <div
                                         style="border:1.5px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; margin-bottom:16px;">
@@ -147,46 +192,260 @@
                                             <div style="padding:10px 12px; border-right:1.5px solid var(--border);">
                                                 <label
                                                     style="display:block; font-size:0.625rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Check-in</label>
-                                                <input type="date" name="checkIn" required
+                                                <input type="date" id="checkInInput" required
                                                     style="border:none;outline:none;font-size:0.875rem;width:100%;font-family:var(--font);color:var(--text-primary);background:transparent;" />
                                             </div>
                                             <div style="padding:10px 12px;">
                                                 <label
                                                     style="display:block; font-size:0.625rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Check-out</label>
-                                                <input type="date" name="checkOut" required
+                                                <input type="date" id="checkOutInput" required
                                                     style="border:none;outline:none;font-size:0.875rem;width:100%;font-family:var(--font);color:var(--text-primary);background:transparent;" />
                                             </div>
                                         </div>
                                         <div style="padding:10px 12px;">
                                             <label
                                                 style="display:block; font-size:0.625rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Guests</label>
-                                            <input type="number" name="guests" min="1" max="10" value="1"
+                                            <input type="number" id="guestsInput" min="1" max="10" value="1"
                                                 style="border:none;outline:none;font-size:0.875rem;width:100%;font-family:var(--font);color:var(--text-primary);background:transparent;" />
                                         </div>
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary btn-full" style="padding:14px;">
-                                        Reserve
+                                    <!-- Live Price Breakdown -->
+                                    <div id="priceBreakdown" class="price-breakdown">
+                                        <div class="price-row">
+                                            <span>₹<%= home.price.toLocaleString() %> × <span id="nightsCountDisplay">1</span> nights</span>
+                                            <span>₹<span id="subtotalDisplay">0</span></span>
+                                        </div>
+                                        <div class="price-row">
+                                            <span>Service fee</span>
+                                            <span>₹0</span>
+                                        </div>
+                                        <div class="price-total">
+                                            <span>Total (INR)</span>
+                                            <span>₹<span id="grandTotalDisplay">0</span></span>
+                                        </div>
+                                    </div>
+
+                                    <div id="paymentAlert" style="display:none; margin: 12px 0; padding: 10px 14px; border-radius: 8px; font-size: 0.875rem;"></div>
+
+                                    <button type="submit" id="payButton" class="btn btn-primary btn-full" style="padding:14px; margin-top: 14px;">
+                                        <span id="btnText">Reserve & Pay with Razorpay</span>
                                     </button>
                                 </form>
-                                <% } else { %>
-                                    <div style="text-align:center; padding: 20px 0;">
-                                        <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:16px;">
-                                            Please sign in to reserve this home</p>
-                                        <a href="/login" class="btn btn-primary btn-full"
-                                            style="padding:14px; text-decoration:none;">
-                                            Sign in to Reserve
-                                        </a>
-                                    </div>
-                                    <% } %>
 
-                                        <p
-                                            style="text-align:center; font-size:0.8125rem; color:var(--text-secondary); margin-top:12px;">
-                                            You won't be charged yet</p>
+                                <div class="badge-secure">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                    </svg>
+                                    Secured by Razorpay Test Gateway
+                                </div>
+                            <% } else { %>
+                                <div style="text-align:center; padding: 20px 0;">
+                                    <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:16px;">
+                                        Please sign in to reserve this home</p>
+                                    <a href="/login" class="btn btn-primary btn-full"
+                                        style="padding:14px; text-decoration:none;">
+                                        Sign in to Reserve
+                                    </a>
+                                </div>
+                            <% } %>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <script>
+                const unitPrice = <%= home.price %>;
+                const checkInEl = document.getElementById('checkInInput');
+                const checkOutEl = document.getElementById('checkOutInput');
+                const breakdownEl = document.getElementById('priceBreakdown');
+                const nightsCountEl = document.getElementById('nightsCountDisplay');
+                const subtotalEl = document.getElementById('subtotalDisplay');
+                const grandTotalEl = document.getElementById('grandTotalDisplay');
+                const payButton = document.getElementById('payButton');
+                const btnText = document.getElementById('btnText');
+                const paymentAlert = document.getElementById('paymentAlert');
+
+                // Set min date to today
+                if (checkInEl && checkOutEl) {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    checkInEl.min = todayStr;
+                    checkOutEl.min = todayStr;
+
+                    function updatePriceEstimate() {
+                        const inVal = checkInEl.value;
+                        const outVal = checkOutEl.value;
+                        if (!inVal || !outVal) {
+                            breakdownEl.classList.remove('active');
+                            return;
+                        }
+
+                        const d1 = new Date(inVal);
+                        const d2 = new Date(outVal);
+                        const diffTime = d2.getTime() - d1.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays > 0) {
+                            const total = diffDays * unitPrice;
+                            nightsCountEl.textContent = diffDays;
+                            subtotalEl.textContent = total.toLocaleString();
+                            grandTotalEl.textContent = total.toLocaleString();
+                            breakdownEl.classList.add('active');
+                        } else {
+                            breakdownEl.classList.remove('active');
+                        }
+                    }
+
+                    checkInEl.addEventListener('change', () => {
+                        if (checkInEl.value) {
+                            const nextDay = new Date(checkInEl.value);
+                            nextDay.setDate(nextDay.getDate() + 1);
+                            checkOutEl.min = nextDay.toISOString().split('T')[0];
+                        }
+                        updatePriceEstimate();
+                    });
+
+                    checkOutEl.addEventListener('change', updatePriceEstimate);
+                }
+
+                function showAlert(msg, isError = true) {
+                    if (!paymentAlert) return;
+                    paymentAlert.style.display = 'block';
+                    paymentAlert.style.backgroundColor = isError ? '#FEF2F2' : '#ECFDF5';
+                    paymentAlert.style.color = isError ? '#991B1B' : '#065F46';
+                    paymentAlert.style.border = isError ? '1px solid #FCA5A5' : '1px solid #A7F3D0';
+                    paymentAlert.textContent = msg;
+                }
+
+                async function initiateRazorpayBooking() {
+                    const houseId = document.getElementById('houseId').value;
+                    const checkIn = checkInEl.value;
+                    const checkOut = checkOutEl.value;
+                    const guests = document.getElementById('guestsInput').value || 1;
+
+                    if (!checkIn || !checkOut) {
+                        showAlert('Please select both check-in and check-out dates.');
+                        return;
+                    }
+
+                    // UI Loading State
+                    payButton.disabled = true;
+                    payButton.classList.add('btn-loading');
+                    btnText.textContent = 'Creating Secure Order...';
+                    paymentAlert.style.display = 'none';
+
+                    try {
+                        // 1. Create order on backend (Server calculates price)
+                        const res = await fetch('/api/payments/create-order', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                houseId,
+                                checkIn,
+                                checkOut,
+                                guests
+                            })
+                        });
+
+                        const resText = await res.text();
+                        let data;
+                        try {
+                            data = JSON.parse(resText);
+                        } catch (e) {
+                            throw new Error('Server returned unexpected response (status ' + res.status + '). Please ensure the backend server was restarted.');
+                        }
+
+                        if (!res.ok || !data.success) {
+                            throw new Error(data.message || 'Failed to create order.');
+                        }
+
+                        btnText.textContent = 'Complete Payment in Modal...';
+
+                        // 2. Open Razorpay Checkout Modal
+                        const options = {
+                            key: data.keyId,
+                            amount: data.amount,
+                            currency: data.currency,
+                            name: 'Airbnb Stays',
+                            description: `Booking for ${data.propertyDetails.houseName} (${data.propertyDetails.nightCount} nights)`,
+                            order_id: data.orderId,
+                            prefill: {
+                                name: data.prefill.name || '',
+                                email: data.prefill.email || ''
+                            },
+                            theme: {
+                                color: '#FF385C'
+                            },
+                            handler: async function (response) {
+                                btnText.textContent = 'Verifying Payment...';
+                                try {
+                                    // 3. Verify Payment with backend
+                                    const verifyRes = await fetch('/api/payments/verify-payment', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature,
+                                            bookingId: data.bookingId
+                                        })
+                                    });
+
+                                    const verifyText = await verifyRes.text();
+                                    let verifyData;
+                                    try {
+                                        verifyData = JSON.parse(verifyText);
+                                    } catch (e) {
+                                        throw new Error('Payment verification returned invalid server response.');
+                                    }
+
+                                    if (verifyRes.ok && verifyData.success) {
+                                        showAlert('Payment successful! Redirecting to your trips...', false);
+                                        setTimeout(() => {
+                                            window.location.href = verifyData.redirectUrl || '/bookings';
+                                        }, 1500);
+                                    } else {
+                                        throw new Error(verifyData.message || 'Payment verification failed.');
+                                    }
+                                } catch (verErr) {
+                                    showAlert('Error verifying payment: ' + verErr.message);
+                                    resetButton();
+                                }
+                            },
+                            modal: {
+                                ondismiss: function() {
+                                    showAlert('Payment cancelled or closed. You can retry when ready.', true);
+                                    resetButton();
+                                }
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', function (response) {
+                            showAlert('Payment Failed: ' + (response.error.description || 'Unknown error'));
+                            resetButton();
+                        });
+                        rzp.open();
+
+                    } catch (err) {
+                        showAlert(err.message);
+                        resetButton();
+                    }
+                }
+
+                function resetButton() {
+                    payButton.disabled = false;
+                    payButton.classList.remove('btn-loading');
+                    btnText.textContent = 'Reserve & Pay with Razorpay';
+                }
+            </script>
 
             <%- include('../partials/footer') %>
     </body>

@@ -24,40 +24,67 @@ exports.getHomes = (req, res, next) => {
   });
 };
 
-exports.getBookings = (req, res, next) => {
-  Booking.find()
-    .populate('houseId')
-    .lean()
-    .then((bookings) => {
-      res.render("store/bookings", {
-        bookings: bookings,
-        pageTitle: "My Bookings",
-        currentPage: "bookings",
-        isLoggedIn: req.isLoggedIn,
-      });
+exports.getBookings = async (req, res, next) => {
+  try {
+    const userId = req.session.userId;
+    const filter = req.session.userRole === 'admin' ? {} : { userId };
+
+    const bookings = await Booking.find(filter)
+      .populate('houseId')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.render("store/bookings", {
+      bookings: bookings,
+      pageTitle: "My Bookings",
+      currentPage: "bookings",
+      isLoggedIn: req.isLoggedIn,
     });
+  } catch (err) {
+    console.error("Error fetching bookings:", err);
+    res.redirect("/");
+  }
 };
 
-exports.postAddBooking = (req, res, next) => {
-  const { houseId, checkIn, checkOut, guests } = req.body;
-  const booking = new Booking({
-    houseId,
-    checkIn: new Date(checkIn),
-    checkOut: new Date(checkOut),
-    guests: parseInt(guests) || 1
-  });
-  booking.save().then(() => {
+exports.postAddBooking = async (req, res, next) => {
+  try {
+    const { houseId, checkIn, checkOut, guests } = req.body;
+    const home = await Home.findById(houseId);
+    if (!home) return res.redirect("/homes");
+
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const diffDays = Math.max(1, Math.round((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
+    const totalAmount = diffDays * home.price;
+
+    const booking = new Booking({
+      houseId,
+      userId: req.session.userId,
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
+      guests: parseInt(guests) || 1,
+      nightCount: diffDays,
+      pricePerNight: home.price,
+      totalAmount: totalAmount,
+      status: 'confirmed',
+      paymentStatus: 'paid'
+    });
+
+    await booking.save();
     console.log("Booking created successfully");
     res.redirect("/bookings");
-  }).catch(err => {
+  } catch (err) {
     console.log("Error while creating booking: ", err);
     res.redirect("/bookings");
-  });
+  }
 };
 
 exports.postRemoveBooking = (req, res, next) => {
   const bookingId = req.params.bookingId;
-  Booking.findByIdAndDelete(bookingId)
+  const userId = req.session.userId;
+  const filter = req.session.userRole === 'admin' ? { _id: bookingId } : { _id: bookingId, userId };
+
+  Booking.findOneAndDelete(filter)
     .then(() => {
       console.log("Booking cancelled successfully");
     })
@@ -127,6 +154,7 @@ exports.getHomeDetails = (req, res, next) => {
         pageTitle: "Home Detail",
         currentPage: "Home",
         isLoggedIn: req.isLoggedIn,
+        razorpayKeyId: process.env.RAZORPAY_KEY_ID || ''
       });
     }
   });

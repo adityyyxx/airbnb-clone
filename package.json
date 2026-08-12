@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --detectOpenHandles --forceExit",
     "tailwind": "npx @tailwindcss/cli -i ./views/input.css -o ./public/output.css --watch",
     "build": "npx @tailwindcss/cli -i ./views/input.css -o ./public/output.css",
     "start": "node app.js"
@@ -13,7 +13,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.0.0"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.0.0",
@@ -26,11 +28,13 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "postcss": "^8.5.6",
+    "razorpay": "^2.9.5",
     "tailwindcss": "^4.1.13"
   }
 }
