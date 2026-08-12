@@ -79,15 +79,26 @@
                                     <%= home.location %>
                                 </div>
                             </div>
-                            <div class="card-rating" style="font-size:1rem; gap:6px;">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB400">
-                                    <path
-                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                </svg>
-                                <strong>
-                                    <%= home.rating %>
-                                </strong>
-                                <span style="color:var(--text-secondary);">· 24 reviews</span>
+                            <div style="display:flex; align-items:center; gap:16px;">
+                                <div class="card-rating" style="font-size:1rem; gap:6px; margin:0; display:inline-flex; align-items:center;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB400">
+                                        <path
+                                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                    </svg>
+                                    <strong>
+                                        <%= home.rating %>
+                                    </strong>
+                                    <span style="color:var(--text-secondary);">· 24 reviews</span>
+                                </div>
+                                <form action="/favourites" method="POST" style="margin:0; display:inline-flex;">
+                                    <input type="hidden" name="id" value="<%= home._id %>" />
+                                    <button type="submit" class="heart-btn" title="Add to Wishlist" 
+                                        style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:50%; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all var(--transition-fast);">
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-primary)" stroke-width="2">
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                        </svg>
+                                    </button>
+                                </form>
                             </div>
                         </div>
 
