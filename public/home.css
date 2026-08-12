@@ -1225,6 +1225,14 @@ textarea.form-input {
   border-top: none !important;
   border-bottom: none !important;
   box-shadow: none !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.category-tabs::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .category-tab {
@@ -2163,17 +2171,38 @@ html, body {
     overflow-x: auto !important;
     white-space: nowrap !important;
     padding: 8px 0 4px !important;
-    gap: 12px !important;
+    gap: 10px !important;
     border: none !important;
     border-top: none !important;
     border-bottom: none !important;
+    box-shadow: none !important;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .category-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .category-tab {
-    padding: 6px 12px !important;
+    padding: 6px 14px !important;
     font-size: 0.8125rem !important;
     flex-shrink: 0 !important;
+    border-radius: var(--radius-full) !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+  }
+
+  .category-tab.active {
+    color: #FF385C !important;
+    font-weight: 600 !important;
+    background: #FFF0F3 !important;
+    border: 1px solid rgba(255, 56, 92, 0.22) !important;
+    border-radius: var(--radius-full) !important;
+    box-shadow: 0 1px 4px rgba(255, 56, 92, 0.08) !important;
   }
 
   /* 3. Search Bar & Dropdowns */
