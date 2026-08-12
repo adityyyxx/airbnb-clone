@@ -1944,7 +1944,10 @@ html, body {
 
   .nav-inner {
     display: flex !important;
-    flex-direction: column !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     height: auto !important;
     padding: 8px 12px !important;
     gap: 8px !important;
@@ -1952,16 +1955,24 @@ html, body {
     box-sizing: border-box;
   }
 
-  .nav-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
+  .nav-logo {
+    order: 1 !important;
   }
 
   .nav-links {
+    order: 2 !important;
+    display: flex !important;
+    align-items: center !important;
     gap: 6px !important;
-    flex-wrap: wrap;
+    flex-wrap: nowrap !important;
+  }
+
+  .nav-user-text {
+    max-width: 85px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
   }
 
   .nav-link {
@@ -1973,15 +1984,17 @@ html, body {
     padding: 6px 12px !important;
     font-size: 0.8125rem !important;
     border-radius: var(--radius-full) !important;
+    white-space: nowrap !important;
   }
 
   .category-tabs {
+    order: 3 !important;
     display: flex !important;
     width: 100% !important;
     justify-content: flex-start !important;
     overflow-x: auto !important;
     white-space: nowrap !important;
-    padding: 6px 0 !important;
+    padding: 6px 0 0 !important;
     gap: 12px !important;
     border-top: 1px solid var(--border-light) !important;
     -webkit-overflow-scrolling: touch;
