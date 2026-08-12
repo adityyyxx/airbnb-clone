@@ -228,10 +228,11 @@ select {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: var(--nav-height);
+  height: auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 0 24px;
+  padding: 12px 24px 8px;
   transition: box-shadow var(--transition-base);
 }
 
@@ -249,6 +250,7 @@ select {
 }
 
 .nav-logo {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -269,9 +271,11 @@ select {
 }
 
 .nav-links {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 8px;
   list-style: none;
 }
 
@@ -1072,22 +1076,23 @@ textarea.form-input {
 
 /* ── Category Tabs ── */
 .category-tabs {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 20px;
 }
 
 .category-tab {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  padding: 8px 20px;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 600;
+  gap: 8px;
+  padding: 8px 12px 10px;
+  font-size: 0.9375rem;
+  font-weight: 500;
   color: var(--text-secondary);
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast);
   text-decoration: none;
   position: relative;
   cursor: pointer;
@@ -1095,34 +1100,33 @@ textarea.form-input {
 
 .category-tab:hover {
   color: var(--text-primary);
-  background: var(--bg-secondary);
 }
 
 .category-tab.active {
   color: var(--text-primary);
-  opacity: 1;
+  font-weight: 600;
 }
 
 .category-tab::after {
   content: '';
   position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%) scaleX(0);
-  width: 24px;
+  bottom: 0;
+  left: 10px;
+  right: 10px;
   height: 2px;
   background: var(--text-primary);
+  transform: scaleX(0);
   transition: transform var(--transition-base);
   border-radius: var(--radius-full);
 }
 
 .category-tab.active::after {
-  transform: translateX(-50%) scaleX(1);
+  transform: scaleX(1);
 }
 
 .category-tab svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .tab-new-badge {
@@ -1939,7 +1943,7 @@ html, body {
     top: 0;
     z-index: 1000;
     height: auto !important;
-    padding: 0 !important;
+    padding: 10px 14px 6px !important;
   }
 
   .nav-inner {
@@ -1949,7 +1953,7 @@ html, body {
     justify-content: space-between !important;
     align-items: center !important;
     height: auto !important;
-    padding: 8px 12px !important;
+    padding: 4px 0 !important;
     gap: 8px !important;
     width: 100% !important;
     box-sizing: border-box;
@@ -1957,10 +1961,12 @@ html, body {
 
   .nav-logo {
     order: 1 !important;
+    flex: initial !important;
   }
 
   .nav-links {
     order: 2 !important;
+    flex: initial !important;
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -1993,12 +1999,14 @@ html, body {
 
   .category-tabs {
     order: 3 !important;
+    flex: initial !important;
     display: flex !important;
     width: 100% !important;
     justify-content: flex-start !important;
     overflow-x: auto !important;
     white-space: nowrap !important;
-    padding: 6px 0 0 !important;
+    padding: 8px 0 4px !important;
+    margin-top: 4px !important;
     gap: 12px !important;
     border-top: 1px solid var(--border-light) !important;
     -webkit-overflow-scrolling: touch;

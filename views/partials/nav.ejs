@@ -1,4 +1,4 @@
-<header class="navbar glass" style="height:auto; flex-direction:column; padding:0;">
+<header class="navbar glass" style="height:auto; flex-direction:column; padding: 12px 0 8px;">
   <!-- Top Nav Row -->
   <div class="nav-inner">
     <a href="/" class="nav-logo">
@@ -12,8 +12,8 @@
     <!-- Center Category Tabs -->
     <div class="category-tabs">
       <a href="/"
-        class="category-tab <%= (typeof currentPage !== 'undefined' && (currentPage === 'index' || currentPage === 'Home')) ? 'active' : '' %>">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        class="category-tab <%= (typeof currentPage !== 'undefined' && (currentPage === 'index' || currentPage === 'Home' || currentPage === 'homes')) ? 'active' : '' %>">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
@@ -21,8 +21,7 @@
       </a>
       <a href="/experiences"
         class="category-tab <%= (typeof currentPage !== 'undefined' && currentPage === 'experiences') ? 'active' : '' %>">
-        <span class="tab-new-badge">NEW</span>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
           <circle cx="12" cy="12" r="10" />
           <path d="M12 8v4l3 3" />
         </svg>
@@ -30,8 +29,7 @@
       </a>
       <a href="/services"
         class="category-tab <%= (typeof currentPage !== 'undefined' && currentPage === 'services') ? 'active' : '' %>">
-        <span class="tab-new-badge">NEW</span>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
           <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
