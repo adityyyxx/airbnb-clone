@@ -1,7 +1,7 @@
 <%- include('../partials/head') %>
   </head>
 
-  <body>
+  <body data-is-logged-in="<%= isLoggedIn ? 'true' : 'false' %>">
     <%- include('../partials/nav') %>
 
       <div class="page-container" style="padding-top:24px;">
@@ -225,13 +225,13 @@
       </div>
 
       <script>
-        const isLoggedIn = <%= isLoggedIn ? 'true' : 'false' %>;
-
         async function toggleWishlist(e, homeId) {
           e.preventDefault();
           e.stopPropagation();
 
-          if (!isLoggedIn) {
+          const isUserLoggedIn = document.body.dataset.isLoggedIn === 'true';
+
+          if (!isUserLoggedIn) {
             window.location.href = '/login';
             return;
           }
