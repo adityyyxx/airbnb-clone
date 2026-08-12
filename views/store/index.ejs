@@ -33,7 +33,7 @@
           <div class="scroll-row-wrapper">
             <div class="scroll-row" id="row1">
               <% registeredHomes.forEach((home, index)=> { %>
-                <a href="/homes/<%= home._id %>" class="listing-card">
+                <a href="/homes/<%= home._id %>" class="listing-card" data-home-id="<%= home._id %>">
                   <div class="listing-card-image">
                     <% if (home.photoUrl) { %>
                       <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" loading="lazy" />
@@ -45,8 +45,12 @@
                           <% if (home.rating>= 4.5) { %>
                             <span class="guest-fav-badge">Guest favourite</span>
                             <% } %>
-                              <div class="listing-card-heart" onclick="event.preventDefault();event.stopPropagation();">
-                                <button class="heart-btn" onclick="event.preventDefault();event.stopPropagation();">
+                              <div class="listing-card-heart">
+                                <button type="button" 
+                                  class="heart-btn <%= (typeof favouriteIds !== 'undefined' && favouriteIds.includes(home._id.toString())) ? 'active filled' : '' %>" 
+                                  data-id="<%= home._id %>"
+                                  title="Save to Wishlist"
+                                  onclick="toggleWishlist(event, '<%= home._id %>')">
                                   <svg viewBox="0 0 24 24">
                                     <path
                                       d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -101,7 +105,7 @@
           <div class="scroll-row-wrapper">
             <div class="scroll-row" id="row2">
               <% registeredHomes.slice().reverse().forEach((home, index)=> { %>
-                <a href="/homes/<%= home._id %>" class="listing-card">
+                <a href="/homes/<%= home._id %>" class="listing-card" data-home-id="<%= home._id %>">
                   <div class="listing-card-image">
                     <% if (home.photoUrl) { %>
                       <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" loading="lazy" />
@@ -111,8 +115,12 @@
                           No image</div>
                         <% } %>
                           <span class="guest-fav-badge">Guest favourite</span>
-                          <div class="listing-card-heart" onclick="event.preventDefault();event.stopPropagation();">
-                            <button class="heart-btn" onclick="event.preventDefault();event.stopPropagation();">
+                          <div class="listing-card-heart">
+                            <button type="button" 
+                              class="heart-btn <%= (typeof favouriteIds !== 'undefined' && favouriteIds.includes(home._id.toString())) ? 'active filled' : '' %>" 
+                              data-id="<%= home._id %>"
+                              title="Save to Wishlist"
+                              onclick="toggleWishlist(event, '<%= home._id %>')">
                               <svg viewBox="0 0 24 24">
                                 <path
                                   d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -167,7 +175,7 @@
           <div class="scroll-row-wrapper">
             <div class="scroll-row" id="row3">
               <% registeredHomes.forEach((home, index)=> { %>
-                <a href="/homes/<%= home._id %>" class="listing-card">
+                <a href="/homes/<%= home._id %>" class="listing-card" data-home-id="<%= home._id %>">
                   <div class="listing-card-image">
                     <% if (home.photoUrl) { %>
                       <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" loading="lazy" />
@@ -179,8 +187,12 @@
                           <% if (home.rating>= 4.5) { %>
                             <span class="guest-fav-badge">Guest favourite</span>
                             <% } %>
-                              <div class="listing-card-heart" onclick="event.preventDefault();event.stopPropagation();">
-                                <button class="heart-btn" onclick="event.preventDefault();event.stopPropagation();">
+                              <div class="listing-card-heart">
+                                <button type="button" 
+                                  class="heart-btn <%= (typeof favouriteIds !== 'undefined' && favouriteIds.includes(home._id.toString())) ? 'active filled' : '' %>" 
+                                  data-id="<%= home._id %>"
+                                  title="Save to Wishlist"
+                                  onclick="toggleWishlist(event, '<%= home._id %>')">
                                   <svg viewBox="0 0 24 24">
                                     <path
                                       d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -211,6 +223,56 @@
         </div>
 
       </div>
+
+      <script>
+        const isLoggedIn = <%= isLoggedIn ? 'true' : 'false' %>;
+
+        async function toggleWishlist(e, homeId) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (!isLoggedIn) {
+            window.location.href = '/login';
+            return;
+          }
+
+          const buttons = document.querySelectorAll(`button[data-id="${homeId}"]`);
+          
+          // Optimistic UI toggle
+          const isCurrentlyActive = buttons[0]?.classList.contains('active');
+          buttons.forEach(btn => {
+            if (isCurrentlyActive) {
+              btn.classList.remove('active', 'filled');
+            } else {
+              btn.classList.add('active', 'filled');
+            }
+          });
+
+          try {
+            const res = await fetch('/favourites', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ id: homeId })
+            });
+
+            const data = await res.json();
+            if (data && data.success) {
+              buttons.forEach(btn => {
+                if (data.isFavourite) {
+                  btn.classList.add('active', 'filled');
+                } else {
+                  btn.classList.remove('active', 'filled');
+                }
+              });
+            }
+          } catch (err) {
+            console.error('Wishlist toggle error:', err);
+          }
+        }
+      </script>
 
       <%- include('../partials/footer') %>
   </body>

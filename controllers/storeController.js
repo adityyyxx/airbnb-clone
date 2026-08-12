@@ -2,26 +2,46 @@ const Favourite = require("../models/favourite");
 const Home = require("../models/home");
 const Booking = require("../models/booking");
 
-exports.getIndex = (req, res, next) => {
-  Home.find().lean().then((registeredHomes) => {
+exports.getIndex = async (req, res, next) => {
+  try {
+    const registeredHomes = await Home.find({ houseName: { $not: /treehouse/i } }).lean();
+    let favouriteIds = [];
+    if (req.isLoggedIn) {
+      const favourites = await Favourite.find().lean();
+      favouriteIds = favourites.map(f => f.houseId.toString());
+    }
     res.render("store/index", {
       registeredHomes: registeredHomes,
+      favouriteIds: favouriteIds,
       pageTitle: "airbnb Home",
       currentPage: "index",
       isLoggedIn: req.isLoggedIn,
     });
-  });
+  } catch (err) {
+    console.error("Error in getIndex:", err);
+    res.redirect("/homes");
+  }
 };
 
-exports.getHomes = (req, res, next) => {
-  Home.find().lean().then((registeredHomes) => {
+exports.getHomes = async (req, res, next) => {
+  try {
+    const registeredHomes = await Home.find().lean();
+    let favouriteIds = [];
+    if (req.isLoggedIn) {
+      const favourites = await Favourite.find().lean();
+      favouriteIds = favourites.map(f => f.houseId.toString());
+    }
     res.render("store/home-list", {
       registeredHomes: registeredHomes,
+      favouriteIds: favouriteIds,
       pageTitle: "Homes List",
       currentPage: "Home",
       isLoggedIn: req.isLoggedIn,
     });
-  });
+  } catch (err) {
+    console.error("Error in getHomes:", err);
+    res.redirect("/");
+  }
 };
 
 exports.getBookings = async (req, res, next) => {
@@ -86,21 +106,35 @@ exports.getFavouriteList = (req, res, next) => {
   });
 };
 
-exports.postAddToFavourite = (req, res, next) => {
+exports.postAddToFavourite = async (req, res, next) => {
   const homeId = req.body.id;
-  Favourite.findOne({houseId: homeId}).then((fav) => {
+  const isAjax = req.xhr || req.headers.accept?.includes('application/json') || req.headers['content-type']?.includes('application/json');
+
+  try {
+    let fav = await Favourite.findOne({ houseId: homeId });
+    let isFavourite = true;
+
     if (fav) {
-      console.log("Already marked as favourite");
+      // Toggle off if already in favourites
+      await Favourite.findOneAndDelete({ houseId: homeId });
+      isFavourite = false;
     } else {
-      fav = new Favourite({houseId: homeId});
-      fav.save().then((result) => {
-        console.log("Fav added: ", result);
-      });
+      fav = new Favourite({ houseId: homeId });
+      await fav.save();
+      isFavourite = true;
+    }
+
+    if (isAjax) {
+      return res.json({ success: true, isFavourite });
     }
     res.redirect("/favourites");
-  }).catch(err => {
+  } catch (err) {
     console.log("Error while marking favourite: ", err);
-  });
+    if (isAjax) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+    res.redirect("/favourites");
+  }
 };
 
 exports.postRemoveFromFavourite = (req, res, next) => {
