@@ -1207,13 +1207,17 @@ textarea.form-input {
   justify-content: space-between;
 }
 
-/* ── Category Tabs ── */
+/* ── Category Tabs (Clean - No Underlines or Dividers) ── */
 .category-tabs {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 20px;
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
 .category-tab {
@@ -1229,32 +1233,37 @@ textarea.form-input {
   text-decoration: none;
   position: relative;
   cursor: pointer;
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
 .category-tab:hover {
   color: var(--text-primary);
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
 .category-tab.active {
   color: var(--text-primary);
   font-weight: 600;
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
-.category-tab::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 10px;
-  right: 10px;
-  height: 2px;
-  background: var(--text-primary);
-  transform: scaleX(0);
-  transition: transform var(--transition-base);
-  border-radius: var(--radius-full);
-}
-
-.category-tab.active::after {
-  transform: scaleX(1);
+.category-tab::after,
+.category-tab::before,
+.category-tab.active::after,
+.category-tab.active::before,
+.category-tabs::after,
+.category-tabs::before {
+  display: none !important;
+  content: none !important;
+  border: none !important;
 }
 
 .category-tab svg {
@@ -2139,9 +2148,10 @@ html, body {
     overflow-x: auto !important;
     white-space: nowrap !important;
     padding: 8px 0 4px !important;
-    margin-top: 4px !important;
     gap: 12px !important;
-    border-top: 1px solid var(--border-light) !important;
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
     -webkit-overflow-scrolling: touch;
   }
 
