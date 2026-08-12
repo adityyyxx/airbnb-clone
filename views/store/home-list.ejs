@@ -18,7 +18,7 @@
               <div class="card animate-fade-in-up stagger-<%= (index % 6) + 1 %>">
                 <div class="card-image-wrapper">
                   <% if (home.photoUrl) { %>
-                    <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>">
+                    <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" loading="lazy" decoding="async">
                     <% } else { %>
                       <div class="no-image">No image available</div>
                       <% } %>
