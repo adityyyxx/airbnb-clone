@@ -41,62 +41,71 @@
 
     <!-- Right Side -->
     <ul class="nav-links">
-      <% if (isLoggedIn) { %>
-        <% if (userRole !=='admin' ) { %>
-          <li class="nav-hide-mobile">
-            <a href="/homes" class="nav-link <%= currentPage === 'Home' ? 'active' : '' %>">Explore</a>
-          </li>
-          <li class="nav-hide-mobile">
-            <a href="/favourites" class="nav-link <%= currentPage === 'favourites' ? 'active' : '' %>">Wishlist</a>
-          </li>
-          <li class="nav-hide-mobile">
-            <a href="/bookings" class="nav-link <%= currentPage === 'bookings' ? 'active' : '' %>">Trips</a>
-          </li>
-          <% } %>
-            <% if (userRole==='admin' ) { %>
-              <li class="nav-hide-mobile">
-                <a href="/host/host-home-list" class="nav-link <%= currentPage === 'host-homes' ? 'active' : '' %>">Your
-                  Listings</a>
-              </li>
-              <li class="nav-hide-mobile">
-                <a href="/host/add-home" class="nav-link <%= currentPage === 'addHome' ? 'active' : '' %>">List a
-                  Home</a>
-              </li>
+      <li class="nav-menu-wrapper">
+        <button type="button" class="nav-hamburger-btn" id="navMenuBtn" onclick="toggleNavMenu(event)" aria-label="Main menu">
+          <svg class="hamburger-lines" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+          <div class="nav-user-avatar">
+            <% if (isLoggedIn) { %>
+              <span class="nav-avatar-initial"><%= userName ? userName.charAt(0).toUpperCase() : 'U' %></span>
+            <% } else { %>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+              </svg>
+            <% } %>
+          </div>
+        </button>
+        <div class="nav-dropdown-menu" id="navDropdownMenu" style="display:none; flex-direction: column !important; padding: 12px 0;">
+          <% if (isLoggedIn) { %>
+            <div style="padding: 10px 20px 8px; font-weight: 600; color: #222222; font-size: 0.9375rem; display: flex; align-items: center; justify-content: space-between;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <%= userName %>
+              </span>
+              <% if (userRole === 'admin') { %>
+                <span class="badge badge-superhost" style="font-size:0.625rem; padding:2px 6px;">Admin</span>
               <% } %>
-                <li style="display:flex; align-items:center; gap:8px; margin-left:4px;">
-                  <span class="nav-user-text"
-                    style="font-size:0.8125rem; color:var(--text-secondary); display:flex; align-items:center; gap:4px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    <%= userName %>
-                      <% if (userRole==='admin' ) { %>
-                        <span class="badge badge-superhost" style="font-size:0.625rem; padding:2px 6px;">Admin</span>
-                        <% } %>
-                  </span>
-                  <form action="/logout" method="POST" style="margin:0;">
-                    <button type="submit" class="nav-auth-btn">Sign out</button>
-                  </form>
-                </li>
-                <% } else { %>
-                  <li class="desktop-auth-item">
-                    <a href="/login" class="nav-auth-btn" style="background:#FF385C;">Sign in</a>
-                  </li>
-                  <li class="mobile-menu-item-wrapper" style="display:none;">
-                    <button type="button" class="mobile-hamburger-btn" id="mobileMenuBtn" onclick="toggleMobileMenu(event)" aria-label="Open menu" style="display:none;">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <line x1="3" y1="12" x2="21" y2="12"/>
-                        <line x1="3" y1="18" x2="21" y2="18"/>
-                      </svg>
-                    </button>
-                    <div class="mobile-dropdown-menu" id="mobileDropdownMenu" style="display:none;">
-                      <a href="#help" onclick="scrollToHelp()" class="mobile-dropdown-link">Help Centre</a>
-                      <a href="/login" class="mobile-dropdown-link">Log in / Sign up</a>
-                    </div>
-                  </li>
-                  <% } %>
+            </div>
+            <div class="mobile-menu-divider" style="height: 1px; background: #EBEBEB; margin: 6px 0; width: 100% !important;"></div>
+            
+            <% if (userRole !== 'admin') { %>
+              <a href="/favourites" class="nav-dropdown-link" style="display: flex !important; align-items: center !important; font-weight: 500; color: #222222; width: 100% !important;">
+                Wishlist
+              </a>
+              <a href="/bookings" class="nav-dropdown-link" style="display: flex !important; align-items: center !important; font-weight: 500; color: #222222; width: 100% !important;">
+                Trips
+              </a>
+            <% } %>
+
+            <% if (userRole === 'admin') { %>
+              <a href="/host/host-home-list" class="nav-dropdown-link" style="display: flex !important; align-items: center !important; font-weight: 500; color: #222222; width: 100% !important;">
+                Your Listings
+              </a>
+              <a href="/host/add-home" class="nav-dropdown-link" style="display: flex !important; align-items: center !important; font-weight: 500; color: #222222; width: 100% !important;">
+                List a Home
+              </a>
+            <% } %>
+            
+            <div class="mobile-menu-divider" style="height: 1px; background: #EBEBEB; margin: 8px 0; width: 100% !important;"></div>
+            
+            <form action="/logout" method="POST" style="margin:0; width: 100%;">
+              <button type="submit" class="nav-dropdown-link" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer; font-family: inherit; font-size: 0.9375rem; font-weight: 500; color: #FF385C; padding: 12px 20px;">
+                Sign out
+              </button>
+            </form>
+          <% } else { %>
+            <a href="/login" class="nav-dropdown-link" style="display: flex !important; align-items: center !important; font-weight: 600; color: #222222; padding: 14px 20px; width: 100% !important;">
+              Log in or sign up
+            </a>
+          <% } %>
+        </div>
+      </li>
     </ul>
   </div>
 
@@ -278,15 +287,34 @@
     <% } %>
 
   <script>
-    function toggleMobileMenu(e) {
+    function toggleNavMenu(e) {
       if (e) e.stopPropagation();
-      const menu = document.getElementById('mobileDropdownMenu');
-      if (menu) menu.classList.toggle('open');
+      const menu = document.getElementById('navDropdownMenu');
+      const btn = document.getElementById('navMenuBtn');
+      if (menu && btn) {
+        const isOpen = menu.classList.contains('open');
+        if (isOpen) {
+          menu.style.display = 'none';
+          menu.classList.remove('open');
+          btn.classList.remove('active');
+        } else {
+          menu.style.display = 'flex';
+          menu.classList.add('open');
+          btn.classList.add('active');
+        }
+      }
     }
 
     function scrollToHelp() {
-      const menu = document.getElementById('mobileDropdownMenu');
-      if (menu) menu.classList.remove('open');
+      const menu = document.getElementById('navDropdownMenu');
+      const btn = document.getElementById('navMenuBtn');
+      if (menu) {
+        menu.style.display = 'none';
+        menu.classList.remove('open');
+      }
+      if (btn) {
+        btn.classList.remove('active');
+      }
       const footer = document.querySelector('footer');
       if (footer) {
         footer.scrollIntoView({ behavior: 'smooth' });
@@ -294,10 +322,12 @@
     }
 
     document.addEventListener('click', function (e) {
-      const menu = document.getElementById('mobileDropdownMenu');
-      const btn = document.getElementById('mobileMenuBtn');
+      const menu = document.getElementById('navDropdownMenu');
+      const btn = document.getElementById('navMenuBtn');
       if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+        menu.style.display = 'none';
         menu.classList.remove('open');
+        btn.classList.remove('active');
       }
     });
   </script>
