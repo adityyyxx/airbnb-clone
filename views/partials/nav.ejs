@@ -1,4 +1,4 @@
-<header class="navbar glass" style="height:auto; flex-direction:column; padding: 12px 0 8px; border-bottom: none !important; box-shadow: none;">
+<header class="navbar glass" style="position: sticky; top: 0; z-index: 1000; width: 100%; height: auto; flex-direction: column; padding: 12px 0 8px; border-bottom: none !important;">
   <!-- Top Nav Row -->
   <div class="nav-inner">
     <a href="/" class="nav-logo">
@@ -330,5 +330,20 @@
         btn.classList.remove('active');
       }
     });
+
+    (function() {
+      const navHeader = document.querySelector('.navbar');
+      if (navHeader) {
+        const updateNavbarOnScroll = () => {
+          if (window.scrollY > 15) {
+            navHeader.classList.add('navbar-scrolled');
+          } else {
+            navHeader.classList.remove('navbar-scrolled');
+          }
+        };
+        window.addEventListener('scroll', updateNavbarOnScroll, { passive: true });
+        updateNavbarOnScroll();
+      }
+    })();
   </script>
 </header>
