@@ -267,7 +267,7 @@
             </div>
 
             <script>
-                const unitPrice = <%= home.price %>;
+                const unitPrice = Number('<%= home.price %>') || 0;
                 const checkInEl = document.getElementById('checkInInput');
                 const checkOutEl = document.getElementById('checkOutInput');
                 const breakdownEl = document.getElementById('priceBreakdown');

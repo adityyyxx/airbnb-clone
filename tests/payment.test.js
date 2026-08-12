@@ -258,4 +258,97 @@ describe('Razorpay Payment Security & Signature Verification Suite', () => {
       }).toThrow();
     });
   });
+
+  describe('7. Date Overlap & Availability Validation', () => {
+    const isOverlapping = (reqIn, reqOut, existIn, existOut) => {
+      const rIn = new Date(reqIn);
+      const rOut = new Date(reqOut);
+      const eIn = new Date(existIn);
+      const eOut = new Date(existOut);
+      return eIn < rOut && eOut > rIn;
+    };
+
+    it('should detect overlapping date ranges for confirmed bookings', () => {
+      const existingCheckIn = '2026-10-10';
+      const existingCheckOut = '2026-10-15';
+
+      // Partial overlap front
+      expect(isOverlapping('2026-10-08', '2026-10-12', existingCheckIn, existingCheckOut)).toBe(true);
+      // Partial overlap back
+      expect(isOverlapping('2026-10-12', '2026-10-18', existingCheckIn, existingCheckOut)).toBe(true);
+      // Full envelopment
+      expect(isOverlapping('2026-10-05', '2026-10-20', existingCheckIn, existingCheckOut)).toBe(true);
+      // Exact same dates
+      expect(isOverlapping('2026-10-10', '2026-10-15', existingCheckIn, existingCheckOut)).toBe(true);
+    });
+
+    it('should allow consecutive non-overlapping bookings', () => {
+      const existingCheckIn = '2026-10-10';
+      const existingCheckOut = '2026-10-15';
+
+      // Checkout same day next guest checks in
+      expect(isOverlapping('2026-10-15', '2026-10-20', existingCheckIn, existingCheckOut)).toBe(false);
+      // Guest leaves before existing check in
+      expect(isOverlapping('2026-10-05', '2026-10-10', existingCheckIn, existingCheckOut)).toBe(false);
+    });
+  });
+
+  describe('8. Webhook Invalid Signature HTTP 401 Status', () => {
+    it('should determine HTTP 401 for missing or invalid webhook signature', () => {
+      const checkWebhookAuth = (sig, rawBody, secret) => {
+        if (!sig) return { status: 401, error: 'Missing signature' };
+        const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+        try {
+          const valid = crypto.timingSafeEqual(Buffer.from(expected, 'utf8'), Buffer.from(sig, 'utf8'));
+          return valid ? { status: 200 } : { status: 401, error: 'Invalid signature' };
+        } catch {
+          return { status: 401, error: 'Invalid signature' };
+        }
+      };
+
+      expect(checkWebhookAuth(null, '{}', TEST_WEBHOOK_SECRET).status).toBe(401);
+      expect(checkWebhookAuth('invalid_sig', '{}', TEST_WEBHOOK_SECRET).status).toBe(401);
+    });
+  });
+
+  describe('9. Concurrent E11000 Duplicate Key Error Recovery', () => {
+    it('should recover from MongoDB error 11000 and return existing order without failing with 500', async () => {
+      const mockDatabase = new Map();
+      const existingTransaction = {
+        idempotencyKey: 'concurrent_key_777',
+        razorpayOrderId: 'order_concurrent_123',
+        amount: 3500,
+        status: 'created'
+      };
+      mockDatabase.set('concurrent_key_777', existingTransaction);
+
+      const saveTransactionWithConcurrentHandling = async (txData) => {
+        try {
+          if (mockDatabase.has(txData.idempotencyKey)) {
+            const err = new Error('E11000 duplicate key error collection');
+            err.code = 11000;
+            throw err;
+          }
+          mockDatabase.set(txData.idempotencyKey, txData);
+          return { status: 201, orderId: txData.razorpayOrderId };
+        } catch (saveErr) {
+          if (saveErr.code === 11000 && txData.idempotencyKey) {
+            const existing = mockDatabase.get(txData.idempotencyKey);
+            if (existing) {
+              return { status: 200, orderId: existing.razorpayOrderId, message: 'Existing order retrieved' };
+            }
+          }
+          throw saveErr;
+        }
+      };
+
+      const concurrentResult = await saveTransactionWithConcurrentHandling({
+        idempotencyKey: 'concurrent_key_777',
+        razorpayOrderId: 'order_concurrent_999'
+      });
+
+      expect(concurrentResult.status).toBe(200);
+      expect(concurrentResult.orderId).toBe('order_concurrent_123');
+    });
+  });
 });

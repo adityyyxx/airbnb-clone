@@ -95,6 +95,21 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    // Check property availability (no overlapping confirmed bookings)
+    const overlappingBooking = await Booking.findOne({
+      houseId: home._id,
+      status: 'confirmed',
+      checkIn: { $lt: checkOutDate },
+      checkOut: { $gt: checkInDate }
+    });
+
+    if (overlappingBooking) {
+      return res.status(400).json({
+        success: false,
+        message: 'This property is already booked for the selected dates. Please choose different dates.'
+      });
+    }
+
     // SERVER-SIDE AMOUNT CALCULATION (Rule 1 & 2: Never trust client amount)
     const pricePerNight = home.price;
     const totalAmount = nightCount * pricePerNight;
@@ -178,7 +193,38 @@ exports.createOrder = async (req, res) => {
       status: 'created',
       idempotencyKey: idempotencyKey || razorpayOrder.id
     });
-    await transaction.save();
+
+    try {
+      await transaction.save();
+    } catch (saveErr) {
+      if (saveErr.code === 11000 && idempotencyKey) {
+        const existingTx = await PaymentTransaction.findOne({ idempotencyKey, userId });
+        if (existingTx) {
+          const existingBooking = await Booking.findById(existingTx.bookingId).populate('houseId');
+          const user = await User.findById(userId).lean();
+          return res.status(200).json({
+            success: true,
+            message: 'Existing order retrieved via Idempotency-Key.',
+            keyId: process.env.RAZORPAY_KEY_ID,
+            orderId: existingTx.razorpayOrderId,
+            amount: Math.round(existingTx.amount * 100),
+            currency: existingTx.currency,
+            bookingId: existingBooking?._id || booking._id,
+            propertyDetails: {
+              houseName: existingBooking?.houseId?.houseName || home.houseName,
+              nightCount: existingBooking?.nightCount || nightCount,
+              pricePerNight: existingBooking?.pricePerNight || pricePerNight,
+              totalAmount: existingBooking?.totalAmount || totalAmount
+            },
+            prefill: {
+              name: user?.username || '',
+              email: user?.email || ''
+            }
+          });
+        }
+      }
+      throw saveErr;
+    }
 
     // Fetch user info for prefill
     const user = await User.findById(userId).lean();
@@ -203,6 +249,36 @@ exports.createOrder = async (req, res) => {
       }
     });
   } catch (error) {
+    // Catch concurrent duplicate key error 11000 if reached here
+    const idempotencyKey = req.headers['idempotency-key'] || req.headers['x-idempotency-key'];
+    if (error.code === 11000 && idempotencyKey) {
+      const userId = req.userId || req.session?.userId;
+      const existingTx = await PaymentTransaction.findOne({ idempotencyKey, userId });
+      if (existingTx) {
+        const existingBooking = await Booking.findById(existingTx.bookingId).populate('houseId');
+        const user = await User.findById(userId).lean();
+        return res.status(200).json({
+          success: true,
+          message: 'Existing order retrieved via Idempotency-Key.',
+          keyId: process.env.RAZORPAY_KEY_ID,
+          orderId: existingTx.razorpayOrderId,
+          amount: Math.round(existingTx.amount * 100),
+          currency: existingTx.currency,
+          bookingId: existingBooking?._id,
+          propertyDetails: {
+            houseName: existingBooking?.houseId?.houseName || '',
+            nightCount: existingBooking?.nightCount,
+            pricePerNight: existingBooking?.pricePerNight,
+            totalAmount: existingBooking?.totalAmount
+          },
+          prefill: {
+            name: user?.username || '',
+            email: user?.email || ''
+          }
+        });
+      }
+    }
+
     console.error('Create Order Error:', error);
     const detail = error.error?.description || error.description || error.message;
     let userMsg = 'Failed to create payment order.';
@@ -374,7 +450,7 @@ exports.handleWebhook = async (req, res) => {
   }
 
   if (!signature) {
-    return res.status(400).send('Missing X-Razorpay-Signature header.');
+    return res.status(401).json({ status: 'error', message: 'Missing X-Razorpay-Signature header.' });
   }
 
   // Retrieve raw unparsed body (Rule 5)
@@ -398,7 +474,7 @@ exports.handleWebhook = async (req, res) => {
 
   if (!isWebhookValid) {
     console.error('Razorpay Webhook: Invalid signature verification failed.');
-    return res.status(400).json({ status: 'error', message: 'Invalid webhook signature.' });
+    return res.status(401).json({ status: 'error', message: 'Invalid webhook signature.' });
   }
 
   const eventPayload = typeof req.body === 'object' ? req.body : JSON.parse(rawBody);

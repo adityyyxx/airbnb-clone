@@ -1906,6 +1906,15 @@ textarea.form-input {
   fill: var(--text-primary);
 }
 
+/* ── Nav Inner Base (Desktop) ── */
+.nav-inner {
+  padding: 12px 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 @media (max-width: 768px) {
   .service-categories-row {
     gap: 12px;
@@ -1914,5 +1923,199 @@ textarea.form-input {
   .service-cat-img {
     width: 52px;
     height: 52px;
+  }
+
+  /* 1. Global Containers & Padding */
+  .page-container {
+    padding: 16px 16px 40px !important;
+    max-width: 100% !important;
+  }
+
+  /* 2. Responsive Navigation Bar */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .nav-inner {
+    height: auto !important;
+    min-height: 56px;
+    padding: 8px 16px !important;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .category-tabs {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 6px 0;
+    -webkit-overflow-scrolling: touch;
+    border-top: 1px solid var(--border-light);
+    gap: 12px;
+  }
+
+  .category-tab {
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .nav-links {
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.8125rem;
+  }
+
+  .nav-links li {
+    font-size: 0.8125rem;
+  }
+
+  /* 3. Search Bar & Popups */
+  .search-bar-wrapper {
+    padding: 8px 12px 16px;
+    width: 100%;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    border-radius: var(--radius-md);
+    height: auto;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .search-field {
+    width: 100%;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-light);
+    padding: 8px 12px;
+  }
+
+  .search-btn {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    justify-content: center;
+    margin-top: 4px;
+    padding: 10px;
+  }
+
+  .search-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1100;
+  }
+
+  /* 4. Listing Grids & Horizontal Scroll Rows */
+  .listing-grid,
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)) !important;
+    gap: 20px !important;
+  }
+
+  .scroll-row {
+    gap: 14px;
+    padding-bottom: 8px;
+  }
+
+  .listing-card {
+    min-width: 240px;
+    max-width: 280px;
+  }
+
+  .listing-section-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .listing-section-title {
+    font-size: 1.25rem;
+  }
+
+  /* 5. Property Detail Page */
+  .detail-hero {
+    height: 240px !important;
+    max-height: 260px !important;
+    margin-bottom: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .detail-hero img {
+    height: 240px !important;
+  }
+
+  .detail-layout {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .booking-card {
+    position: relative !important;
+    top: 0 !important;
+    margin-top: 16px;
+    padding: 16px !important;
+  }
+
+  /* 6. Bookings & Favourites Layout */
+  .booking-item-card,
+  .fav-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .booking-item-image {
+    width: 100% !important;
+    height: 180px !important;
+  }
+
+  /* 7. Auth Containers (Login / Signup) */
+  .auth-container,
+  .auth-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 24px 16px !important;
+    margin: 16px auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-logo {
+    font-size: 1.125rem;
+  }
+
+  .nav-logo svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .listing-card {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .detail-hero {
+    height: 210px !important;
+  }
+
+  .detail-hero img {
+    height: 210px !important;
+  }
+
+  .badge {
+    font-size: 0.6875rem;
+    padding: 3px 8px;
   }
 }
