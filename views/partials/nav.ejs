@@ -45,22 +45,22 @@
     <ul class="nav-links">
       <% if (isLoggedIn) { %>
         <% if (userRole !=='admin' ) { %>
-          <li>
+          <li class="nav-hide-mobile">
             <a href="/homes" class="nav-link <%= currentPage === 'Home' ? 'active' : '' %>">Explore</a>
           </li>
-          <li>
+          <li class="nav-hide-mobile">
             <a href="/favourites" class="nav-link <%= currentPage === 'favourites' ? 'active' : '' %>">Wishlist</a>
           </li>
-          <li>
+          <li class="nav-hide-mobile">
             <a href="/bookings" class="nav-link <%= currentPage === 'bookings' ? 'active' : '' %>">Trips</a>
           </li>
           <% } %>
             <% if (userRole==='admin' ) { %>
-              <li>
+              <li class="nav-hide-mobile">
                 <a href="/host/host-home-list" class="nav-link <%= currentPage === 'host-homes' ? 'active' : '' %>">Your
                   Listings</a>
               </li>
-              <li>
+              <li class="nav-hide-mobile">
                 <a href="/host/add-home" class="nav-link <%= currentPage === 'addHome' ? 'active' : '' %>">List a
                   Home</a>
               </li>

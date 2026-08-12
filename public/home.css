@@ -1967,6 +1967,10 @@ html, body {
     flex-wrap: nowrap !important;
   }
 
+  .nav-hide-mobile {
+    display: none !important;
+  }
+
   .nav-user-text {
     max-width: 85px !important;
     overflow: hidden !important;
