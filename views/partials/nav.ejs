@@ -1,13 +1,62 @@
 <header class="navbar glass" style="height:auto; flex-direction:column; padding:0;">
   <!-- Top Nav Row -->
   <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-        <path
-          d="M16 1C7.716 1 1 7.716 1 16s6.716 15 15 15 15-6.716 15-15S24.284 1 16 1zm6.95 22.661c-.634 1.02-1.932 1.339-2.952.705-.04-.025-.08-.052-.118-.08-1.59-1.13-3.559-1.79-5.88-1.79s-4.29.66-5.88 1.79c-.038.028-.078.055-.118.08a2.136 2.136 0 0 1-2.952-.705A2.136 2.136 0 0 1 5.755 20.7c.04-.025.08-.052.118-.08C8.193 19.01 11.86 18 16 18s7.807 1.01 10.127 2.62c.038.028.078.055.118.08a2.136 2.136 0 0 1 .705 2.961zM16 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
-      </svg>
-      airbnb
-    </a>
+    <div class="nav-top-row">
+      <a href="/" class="nav-logo">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+          <path
+            d="M16 1C7.716 1 1 7.716 1 16s6.716 15 15 15 15-6.716 15-15S24.284 1 16 1zm6.95 22.661c-.634 1.02-1.932 1.339-2.952.705-.04-.025-.08-.052-.118-.08-1.59-1.13-3.559-1.79-5.88-1.79s-4.29.66-5.88 1.79c-.038.028-.078.055-.118.08a2.136 2.136 0 0 1-2.952-.705A2.136 2.136 0 0 1 5.755 20.7c.04-.025.08-.052.118-.08C8.193 19.01 11.86 18 16 18s7.807 1.01 10.127 2.62c.038.028.078.055.118.08a2.136 2.136 0 0 1 .705 2.961zM16 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
+        </svg>
+        airbnb
+      </a>
+
+      <!-- Right Side -->
+      <ul class="nav-links">
+        <% if (isLoggedIn) { %>
+          <% if (userRole !=='admin' ) { %>
+            <li>
+              <a href="/homes" class="nav-link <%= currentPage === 'Home' ? 'active' : '' %>">Explore</a>
+            </li>
+            <li>
+              <a href="/favourites" class="nav-link <%= currentPage === 'favourites' ? 'active' : '' %>">Wishlist</a>
+            </li>
+            <li>
+              <a href="/bookings" class="nav-link <%= currentPage === 'bookings' ? 'active' : '' %>">Trips</a>
+            </li>
+            <% } %>
+              <% if (userRole==='admin' ) { %>
+                <li>
+                  <a href="/host/host-home-list" class="nav-link <%= currentPage === 'host-homes' ? 'active' : '' %>">Your
+                    Listings</a>
+                </li>
+                <li>
+                  <a href="/host/add-home" class="nav-link <%= currentPage === 'addHome' ? 'active' : '' %>">List a
+                    Home</a>
+                </li>
+                <% } %>
+                  <li style="display:flex; align-items:center; gap:8px; margin-left:4px;">
+                    <span
+                      style="font-size:0.8125rem; color:var(--text-secondary); display:flex; align-items:center; gap:4px;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                      <%= userName %>
+                        <% if (userRole==='admin' ) { %>
+                          <span class="badge badge-superhost" style="font-size:0.625rem; padding:2px 6px;">Admin</span>
+                          <% } %>
+                    </span>
+                    <form action="/logout" method="POST" style="margin:0;">
+                      <button type="submit" class="nav-auth-btn">Sign out</button>
+                    </form>
+                  </li>
+                  <% } else { %>
+                    <li>
+                      <a href="/login" class="nav-auth-btn" style="background:#FF385C;">Sign in</a>
+                    </li>
+                    <% } %>
+      </ul>
+    </div>
 
     <!-- Center Category Tabs -->
     <div class="category-tabs">
@@ -40,53 +89,6 @@
         <span>Services</span>
       </a>
     </div>
-
-    <!-- Right Side -->
-    <ul class="nav-links">
-      <% if (isLoggedIn) { %>
-        <% if (userRole !=='admin' ) { %>
-          <li>
-            <a href="/homes" class="nav-link <%= currentPage === 'Home' ? 'active' : '' %>">Explore</a>
-          </li>
-          <li>
-            <a href="/favourites" class="nav-link <%= currentPage === 'favourites' ? 'active' : '' %>">Wishlist</a>
-          </li>
-          <li>
-            <a href="/bookings" class="nav-link <%= currentPage === 'bookings' ? 'active' : '' %>">Trips</a>
-          </li>
-          <% } %>
-            <% if (userRole==='admin' ) { %>
-              <li>
-                <a href="/host/host-home-list" class="nav-link <%= currentPage === 'host-homes' ? 'active' : '' %>">Your
-                  Listings</a>
-              </li>
-              <li>
-                <a href="/host/add-home" class="nav-link <%= currentPage === 'addHome' ? 'active' : '' %>">List a
-                  Home</a>
-              </li>
-              <% } %>
-                <li style="display:flex; align-items:center; gap:10px; margin-left:8px;">
-                  <span
-                    style="font-size:0.8125rem; color:var(--text-secondary); display:flex; align-items:center; gap:4px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    <%= userName %>
-                      <% if (userRole==='admin' ) { %>
-                        <span class="badge badge-superhost" style="font-size:0.625rem; padding:2px 6px;">Admin</span>
-                        <% } %>
-                  </span>
-                  <form action="/logout" method="POST" style="margin:0;">
-                    <button type="submit" class="nav-auth-btn">Sign out</button>
-                  </form>
-                </li>
-                <% } else { %>
-                  <li>
-                    <a href="/login" class="nav-auth-btn" style="background:#FF385C;">Sign in</a>
-                  </li>
-                  <% } %>
-    </ul>
   </div>
 
   <!-- Search Bar (only on index page) -->
