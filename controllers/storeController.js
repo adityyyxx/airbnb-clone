@@ -124,23 +124,39 @@ exports.postAddToFavourite = async (req, res, next) => {
 
   if (!userId) {
     if (isAjax) {
-      return res.status(401).json({ success: false, message: 'Authentication required' });
+      return res.status(401).json({ success: false, message: 'Authentication required', redirect: '/login' });
     }
     return res.redirect('/login');
   }
 
+  if (!homeId) {
+    if (isAjax) {
+      return res.status(400).json({ success: false, message: 'Home ID is required' });
+    }
+    return res.redirect('/homes');
+  }
+
   try {
-    let fav = await Favourite.findOne({ houseId: homeId, userId });
+    const existingFav = await Favourite.findOne({ houseId: homeId, userId });
     let isFavourite = true;
 
-    if (fav) {
+    if (existingFav) {
       // Toggle off if already in user's favourites
       await Favourite.findOneAndDelete({ houseId: homeId, userId });
       isFavourite = false;
     } else {
-      fav = new Favourite({ houseId: homeId, userId });
-      await fav.save();
-      isFavourite = true;
+      try {
+        const fav = new Favourite({ houseId: homeId, userId });
+        await fav.save();
+        isFavourite = true;
+      } catch (saveErr) {
+        // Handle race condition or duplicate index collision gracefully
+        if (saveErr.code === 11000) {
+          isFavourite = true;
+        } else {
+          throw saveErr;
+        }
+      }
     }
 
     if (isAjax) {
@@ -171,20 +187,31 @@ exports.postRemoveFromFavourite = (req, res, next) => {
     });
 };
 
-exports.getHomeDetails = (req, res, next) => {
+exports.getHomeDetails = async (req, res, next) => {
   const homeId = req.params.homeId;
-  Home.findById(homeId).lean().then((home) => {
+  try {
+    const homePromise = Home.findById(homeId).lean();
+    const favPromise = req.session.userId 
+      ? Favourite.findOne({ houseId: homeId, userId: req.session.userId }).lean() 
+      : Promise.resolve(null);
+    const [home, fav] = await Promise.all([homePromise, favPromise]);
+
     if (!home) {
       console.log("Home not found");
-      res.redirect("/homes");
-    } else {
-      res.render("store/home-detail", {
-        home: home,
-        pageTitle: "Home Detail",
-        currentPage: "Home",
-        isLoggedIn: req.isLoggedIn,
-        razorpayKeyId: process.env.RAZORPAY_KEY_ID || ''
-      });
+      return res.redirect("/homes");
     }
-  });
+
+    res.render("store/home-detail", {
+      home: home,
+      isFavourite: !!fav,
+      favouriteIds: fav ? [homeId.toString()] : [],
+      pageTitle: "Home Detail",
+      currentPage: "Home",
+      isLoggedIn: req.isLoggedIn,
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID || ''
+    });
+  } catch (err) {
+    console.error("Error in getHomeDetails:", err);
+    res.redirect("/homes");
+  }
 };

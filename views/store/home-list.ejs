@@ -1,7 +1,7 @@
 <%- include('../partials/head') %>
   </head>
 
-  <body>
+  <body data-is-logged-in="<%= isLoggedIn ? 'true' : 'false' %>">
     <%- include('../partials/nav') %>
 
       <div class="page-container">
@@ -29,16 +29,17 @@
                           </svg>
                           Superhost
                         </div>
-                        <div class="card-heart" onclick="event.preventDefault(); event.stopPropagation();">
-                          <form action="/favourites" method="POST" style="margin:0;">
-                            <input type="hidden" name="id" value="<%= home._id %>" />
-                            <button type="submit" class="heart-btn <%= (typeof favouriteIds !== 'undefined' && favouriteIds.includes(home._id.toString())) ? 'filled active' : '' %>" title="Add to Wishlist">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path
-                                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                              </svg>
-                            </button>
-                          </form>
+                        <div class="card-heart">
+                          <button type="button" 
+                            class="heart-btn <%= (typeof favouriteIds !== 'undefined' && favouriteIds.includes(home._id.toString())) ? 'active filled' : '' %>" 
+                            data-id="<%= home._id %>"
+                            title="Save to Wishlist"
+                            onclick="toggleWishlist(event, '<%= home._id %>')">
+                            <svg viewBox="0 0 24 24">
+                              <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                          </button>
                         </div>
                 </div>
                 <div class="card-body">
@@ -68,6 +69,53 @@
             <% }) %>
         </div>
       </div>
+
+      <script>
+        async function toggleWishlist(e, homeId) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const isUserLoggedIn = document.body.dataset.isLoggedIn === 'true';
+
+          if (!isUserLoggedIn) {
+            window.location.href = '/login';
+            return;
+          }
+
+          const buttons = document.querySelectorAll(`button[data-id="${homeId}"]`);
+
+          try {
+            const res = await fetch('/favourites', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ id: homeId })
+            });
+
+            if (res.status === 401) {
+              window.location.href = '/login';
+              return;
+            }
+
+            const data = await res.json();
+            if (data && data.success) {
+              buttons.forEach(btn => {
+                if (data.isFavourite) {
+                  btn.classList.add('active', 'filled');
+                } else {
+                  btn.classList.remove('active', 'filled');
+                }
+              });
+            } else if (data && data.redirect) {
+              window.location.href = data.redirect;
+            }
+          } catch (err) {
+            console.error('Wishlist toggle error:', err);
+          }
+        }
+      </script>
 
       <%- include('../partials/footer') %>
   </body>
