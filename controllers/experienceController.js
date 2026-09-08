@@ -3,16 +3,20 @@ const Experience = require("../models/experience");
 exports.getExperiences = (req, res, next) => {
   Experience.find().lean().then((experiences) => {
     // Group by category
-    const categories = {};
     const categoryOrder = [
       'Adventure', 'Food & Drink', 'Art & Culture', 
       'Wellness', 'Nature', 'Music', 'Sports', 'Nightlife'
     ];
 
+    const grouped = {};
+    for (const e of experiences) {
+      (grouped[e.category] ||= []).push(e);
+    }
+
+    const categories = {};
     categoryOrder.forEach(cat => {
-      const items = experiences.filter(e => e.category === cat);
-      if (items.length > 0) {
-        categories[cat] = items;
+      if (grouped[cat]?.length) {
+        categories[cat] = grouped[cat];
       }
     });
 

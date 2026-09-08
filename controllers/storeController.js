@@ -2,13 +2,20 @@ const Favourite = require("../models/favourite");
 const Home = require("../models/home");
 const Booking = require("../models/booking");
 
+const fetchHomesAndFavourites = async (homeFilter, isLoggedIn) => {
+  const homesPromise = Home.find(homeFilter).lean();
+  const favouritesPromise = isLoggedIn ? Favourite.find().lean() : Promise.resolve([]);
+  const [registeredHomes, favourites] = await Promise.all([homesPromise, favouritesPromise]);
+  const favouriteIds = favourites.map(f => f.houseId.toString());
+  return { registeredHomes, favouriteIds };
+};
+
 exports.getIndex = async (req, res, next) => {
   try {
-    const homesPromise = Home.find({ houseName: { $not: /treehouse/i } }).lean();
-    const favouritesPromise = req.isLoggedIn ? Favourite.find().lean() : Promise.resolve([]);
-
-    const [registeredHomes, favourites] = await Promise.all([homesPromise, favouritesPromise]);
-    const favouriteIds = favourites.map(f => f.houseId.toString());
+    const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites(
+      { houseName: { $not: /treehouse/i } },
+      req.isLoggedIn
+    );
 
     res.render("store/index", {
       registeredHomes: registeredHomes,
@@ -25,11 +32,7 @@ exports.getIndex = async (req, res, next) => {
 
 exports.getHomes = async (req, res, next) => {
   try {
-    const homesPromise = Home.find().lean();
-    const favouritesPromise = req.isLoggedIn ? Favourite.find().lean() : Promise.resolve([]);
-
-    const [registeredHomes, favourites] = await Promise.all([homesPromise, favouritesPromise]);
-    const favouriteIds = favourites.map(f => f.houseId.toString());
+    const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites({}, req.isLoggedIn);
 
     res.render("store/home-list", {
       registeredHomes: registeredHomes,

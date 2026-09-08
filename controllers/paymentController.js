@@ -37,6 +37,37 @@ const verifyCheckoutSignature = (orderId, paymentId, signature, secret) => {
 };
 
 /**
+ * Helper: Find and return existing order for an idempotency key
+ */
+const respondWithExistingOrder = async (idempotencyKey, userId, res, fallbackDetails = {}) => {
+  if (!idempotencyKey || !userId) return false;
+  const existingTx = await PaymentTransaction.findOne({ idempotencyKey, userId });
+  if (!existingTx) return false;
+  const existingBooking = await Booking.findById(existingTx.bookingId).populate('houseId');
+  const user = await User.findById(userId).lean();
+  res.status(200).json({
+    success: true,
+    message: 'Existing order retrieved via Idempotency-Key.',
+    keyId: process.env.RAZORPAY_KEY_ID,
+    orderId: existingTx.razorpayOrderId,
+    amount: Math.round(existingTx.amount * 100),
+    currency: existingTx.currency,
+    bookingId: existingBooking?._id || fallbackDetails.bookingId,
+    propertyDetails: {
+      houseName: existingBooking?.houseId?.houseName || fallbackDetails.houseName || '',
+      nightCount: existingBooking?.nightCount ?? fallbackDetails.nightCount,
+      pricePerNight: existingBooking?.pricePerNight ?? fallbackDetails.pricePerNight,
+      totalAmount: existingBooking?.totalAmount ?? fallbackDetails.totalAmount
+    },
+    prefill: {
+      name: user?.username || '',
+      email: user?.email || ''
+    }
+  });
+  return true;
+};
+
+/**
  * 1. Create Razorpay Order
  * POST /api/payments/create-order
  */
@@ -116,33 +147,8 @@ exports.createOrder = async (req, res) => {
     const amountInPaise = Math.round(totalAmount * 100);
 
     const idempotencyKey = req.headers['idempotency-key'] || req.headers['x-idempotency-key'];
-    if (idempotencyKey) {
-      const existingTx = await PaymentTransaction.findOne({ idempotencyKey, userId });
-      if (existingTx) {
-        const existingBooking = await Booking.findById(existingTx.bookingId).populate('houseId');
-        if (existingBooking) {
-          const user = await User.findById(userId).lean();
-          return res.status(200).json({
-            success: true,
-            message: 'Existing order retrieved via Idempotency-Key.',
-            keyId: process.env.RAZORPAY_KEY_ID,
-            orderId: existingTx.razorpayOrderId,
-            amount: Math.round(existingTx.amount * 100),
-            currency: existingTx.currency,
-            bookingId: existingBooking._id,
-            propertyDetails: {
-              houseName: existingBooking.houseId?.houseName || '',
-              nightCount: existingBooking.nightCount,
-              pricePerNight: existingBooking.pricePerNight,
-              totalAmount: existingBooking.totalAmount
-            },
-            prefill: {
-              name: user?.username || '',
-              email: user?.email || ''
-            }
-          });
-        }
-      }
+    if (idempotencyKey && await respondWithExistingOrder(idempotencyKey, userId, res)) {
+      return;
     }
 
     // Create a pending Booking in DB
@@ -198,29 +204,14 @@ exports.createOrder = async (req, res) => {
       await transaction.save();
     } catch (saveErr) {
       if (saveErr.code === 11000 && idempotencyKey) {
-        const existingTx = await PaymentTransaction.findOne({ idempotencyKey, userId });
-        if (existingTx) {
-          const existingBooking = await Booking.findById(existingTx.bookingId).populate('houseId');
-          const user = await User.findById(userId).lean();
-          return res.status(200).json({
-            success: true,
-            message: 'Existing order retrieved via Idempotency-Key.',
-            keyId: process.env.RAZORPAY_KEY_ID,
-            orderId: existingTx.razorpayOrderId,
-            amount: Math.round(existingTx.amount * 100),
-            currency: existingTx.currency,
-            bookingId: existingBooking?._id || booking._id,
-            propertyDetails: {
-              houseName: existingBooking?.houseId?.houseName || home.houseName,
-              nightCount: existingBooking?.nightCount || nightCount,
-              pricePerNight: existingBooking?.pricePerNight || pricePerNight,
-              totalAmount: existingBooking?.totalAmount || totalAmount
-            },
-            prefill: {
-              name: user?.username || '',
-              email: user?.email || ''
-            }
-          });
+        if (await respondWithExistingOrder(idempotencyKey, userId, res, {
+          bookingId: booking._id,
+          houseName: home.houseName,
+          nightCount,
+          pricePerNight,
+          totalAmount
+        })) {
+          return;
         }
       }
       throw saveErr;
@@ -253,29 +244,8 @@ exports.createOrder = async (req, res) => {
     const idempotencyKey = req.headers['idempotency-key'] || req.headers['x-idempotency-key'];
     if (error.code === 11000 && idempotencyKey) {
       const userId = req.userId || req.session?.userId;
-      const existingTx = await PaymentTransaction.findOne({ idempotencyKey, userId });
-      if (existingTx) {
-        const existingBooking = await Booking.findById(existingTx.bookingId).populate('houseId');
-        const user = await User.findById(userId).lean();
-        return res.status(200).json({
-          success: true,
-          message: 'Existing order retrieved via Idempotency-Key.',
-          keyId: process.env.RAZORPAY_KEY_ID,
-          orderId: existingTx.razorpayOrderId,
-          amount: Math.round(existingTx.amount * 100),
-          currency: existingTx.currency,
-          bookingId: existingBooking?._id,
-          propertyDetails: {
-            houseName: existingBooking?.houseId?.houseName || '',
-            nightCount: existingBooking?.nightCount,
-            pricePerNight: existingBooking?.pricePerNight,
-            totalAmount: existingBooking?.totalAmount
-          },
-          prefill: {
-            name: user?.username || '',
-            email: user?.email || ''
-          }
-        });
+      if (await respondWithExistingOrder(idempotencyKey, userId, res)) {
+        return;
       }
     }
 

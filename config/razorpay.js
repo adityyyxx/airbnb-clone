@@ -1,14 +1,19 @@
 const Razorpay = require('razorpay');
 require('dotenv').config();
 
-const getRazorpayInstance = () => {
-  const key_id = (process.env.RAZORPAY_KEY_ID || '').trim();
-  const key_secret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
+let instance = null;
 
-  return new Razorpay({
-    key_id,
-    key_secret
-  });
+const getRazorpayInstance = () => {
+  if (!instance) {
+    const key_id = (process.env.RAZORPAY_KEY_ID || '').trim();
+    const key_secret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
+
+    instance = new Razorpay({
+      key_id,
+      key_secret
+    });
+  }
+  return instance;
 };
 
 module.exports = {

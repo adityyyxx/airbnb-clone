@@ -41,43 +41,41 @@ exports.getHostHomes = (req, res, next) => {
   });
 };
 
-exports.postAddHome = (req, res, next) => {
-  const { houseName, price, location, rating, photoUrl, description } =
-    req.body;
-  const home = new Home({
-    houseName,
-    price,
-    location,
-    rating,
-    photoUrl,
-    description,
-  });
-  home.save().then(() => {
+exports.postAddHome = async (req, res, next) => {
+  const { houseName, price, location, rating, photoUrl, description } = req.body;
+  try {
+    const home = new Home({
+      houseName,
+      price,
+      location,
+      rating,
+      photoUrl,
+      description,
+    });
+    await home.save();
     console.log("Home Saved successfully");
-  });
-
+  } catch (err) {
+    console.log("Error while saving home: ", err);
+  }
   res.redirect("/host/host-home-list");
 };
 
-exports.postEditHome = (req, res, next) => {
-  const { id, houseName, price, location, rating, photoUrl, description } =
-    req.body;
-  Home.findById(id).then((home) => {
-    home.houseName = houseName;
-    home.price = price;
-    home.location = location;
-    home.rating = rating;
-    home.photoUrl = photoUrl;
-    home.description = description;
-    home.save().then((result) => {
-      console.log("Home updated ", result);
-    }).catch(err => {
-      console.log("Error while updating ", err);
-    })
-    res.redirect("/host/host-home-list");
-  }).catch(err => {
-    console.log("Error while finding home ", err);
-  });
+exports.postEditHome = async (req, res, next) => {
+  const { id, houseName, price, location, rating, photoUrl, description } = req.body;
+  try {
+    const result = await Home.findByIdAndUpdate(id, {
+      houseName,
+      price,
+      location,
+      rating,
+      photoUrl,
+      description
+    });
+    console.log("Home updated ", result?._id || id);
+  } catch (err) {
+    console.log("Error while updating home: ", err);
+  }
+  res.redirect("/host/host-home-list");
 };
 
 exports.postDeleteHome = (req, res, next) => {
