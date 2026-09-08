@@ -2,9 +2,9 @@ const Favourite = require("../models/favourite");
 const Home = require("../models/home");
 const Booking = require("../models/booking");
 
-const fetchHomesAndFavourites = async (homeFilter, isLoggedIn) => {
+const fetchHomesAndFavourites = async (homeFilter, userId) => {
   const homesPromise = Home.find(homeFilter).lean();
-  const favouritesPromise = isLoggedIn ? Favourite.find().lean() : Promise.resolve([]);
+  const favouritesPromise = userId ? Favourite.find({ userId }).lean() : Promise.resolve([]);
   const [registeredHomes, favourites] = await Promise.all([homesPromise, favouritesPromise]);
   const favouriteIds = favourites.map(f => f.houseId.toString());
   return { registeredHomes, favouriteIds };
@@ -14,7 +14,7 @@ exports.getIndex = async (req, res, next) => {
   try {
     const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites(
       { houseName: { $not: /treehouse/i } },
-      req.isLoggedIn
+      req.session.userId
     );
 
     res.render("store/index", {
@@ -32,7 +32,7 @@ exports.getIndex = async (req, res, next) => {
 
 exports.getHomes = async (req, res, next) => {
   try {
-    const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites({}, req.isLoggedIn);
+    const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites({}, req.session.userId);
 
     res.render("store/home-list", {
       registeredHomes: registeredHomes,
@@ -94,35 +94,51 @@ exports.postRemoveBooking = (req, res, next) => {
     });
 };
 
-exports.getFavouriteList = (req, res, next) => {
-  Favourite.find()
-  .populate('houseId')
-  .lean()
-  .then((favourites) => {
-    const favouriteHomes = favourites.map((fav) => fav.houseId);
+exports.getFavouriteList = async (req, res, next) => {
+  try {
+    const userId = req.session.userId;
+    const favourites = await Favourite.find({ userId })
+      .populate('houseId')
+      .lean();
+
+    const favouriteHomes = favourites
+      .map((fav) => fav.houseId)
+      .filter(Boolean); // Filter out any deleted/orphaned homes
+
     res.render("store/favourite-list", {
       favouriteHomes: favouriteHomes,
       pageTitle: "My Favourites",
       currentPage: "favourites",
       isLoggedIn: req.isLoggedIn,
     });
-  });
+  } catch (err) {
+    console.error("Error in getFavouriteList:", err);
+    res.redirect("/");
+  }
 };
 
 exports.postAddToFavourite = async (req, res, next) => {
   const homeId = req.body.id;
+  const userId = req.session.userId;
   const isAjax = req.xhr || req.headers.accept?.includes('application/json') || req.headers['content-type']?.includes('application/json');
 
+  if (!userId) {
+    if (isAjax) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+    return res.redirect('/login');
+  }
+
   try {
-    let fav = await Favourite.findOne({ houseId: homeId });
+    let fav = await Favourite.findOne({ houseId: homeId, userId });
     let isFavourite = true;
 
     if (fav) {
-      // Toggle off if already in favourites
-      await Favourite.findOneAndDelete({ houseId: homeId });
+      // Toggle off if already in user's favourites
+      await Favourite.findOneAndDelete({ houseId: homeId, userId });
       isFavourite = false;
     } else {
-      fav = new Favourite({ houseId: homeId });
+      fav = new Favourite({ houseId: homeId, userId });
       await fav.save();
       isFavourite = true;
     }
@@ -142,7 +158,8 @@ exports.postAddToFavourite = async (req, res, next) => {
 
 exports.postRemoveFromFavourite = (req, res, next) => {
   const homeId = req.params.homeId;
-  Favourite.findOneAndDelete({houseId: homeId})
+  const userId = req.session.userId;
+  Favourite.findOneAndDelete({ houseId: homeId, userId })
     .then((result) => {
       console.log("Fav Removed: ", result);
     })
