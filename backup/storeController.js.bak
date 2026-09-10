@@ -1,51 +1,18 @@
 const Favourite = require("../models/favourite");
 const Home = require("../models/home");
 const Booking = require("../models/booking");
-const cache = require("../utils/cacheUtil");
 
-// Cache TTL configurations (in seconds)
-// Public listings and single property details change only when hosts modify them
-const HOMES_CATALOGUE_TTL = 10 * 60; // 10 minutes TTL
-const HOME_DETAIL_TTL = 15 * 60;     // 15 minutes TTL
-
-/**
- * Helper: Fetch public homes catalogue (cached) and user-specific favourites (live).
- * 
- * WHAT IS CACHED:
- * - Public Home.find() query results (plain JavaScript objects via .lean()).
- * - Keys: "homes:index" (home page) and "homes:all" (/homes).
- * - TTL: 10 minutes.
- * 
- * WHY SAFE TO CACHE:
- * - The list of homes is public catalog data and identical for all users.
- * - Protected against cache stampedes using in-flight promise sharing in cacheUtil.
- * 
- * WHY FAVOURITES ARE NOT CACHED:
- * - Favourites are personal to the logged-in user.
- * - Always queried live from MongoDB so heart icons update immediately upon clicking.
- * 
- * INVALIDATION:
- * - Cleared in hostController.js when any host adds, edits, or deletes a listing.
- */
-const fetchHomesAndFavourites = async (cacheKey, homeFilter, userId) => {
-  // 1. Fetch public homes from cache (or MongoDB on miss)
-  const registeredHomes = await cache.getOrSet(cacheKey, HOMES_CATALOGUE_TTL, async () => {
-    return await Home.find(homeFilter).lean();
-  });
-
-  // 2. Fetch user-specific favourites live (per-request, never shared across users)
-  const favourites = userId 
-    ? await Favourite.find({ userId }).lean() 
-    : [];
+const fetchHomesAndFavourites = async (homeFilter, userId) => {
+  const homesPromise = Home.find(homeFilter).lean();
+  const favouritesPromise = userId ? Favourite.find({ userId }).lean() : Promise.resolve([]);
+  const [registeredHomes, favourites] = await Promise.all([homesPromise, favouritesPromise]);
   const favouriteIds = favourites.map(f => f.houseId.toString());
-
   return { registeredHomes, favouriteIds };
 };
 
 exports.getIndex = async (req, res, next) => {
   try {
     const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites(
-      "homes:index",
       { houseName: { $not: /treehouse/i } },
       req.session.userId
     );
@@ -65,11 +32,7 @@ exports.getIndex = async (req, res, next) => {
 
 exports.getHomes = async (req, res, next) => {
   try {
-    const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites(
-      "homes:all",
-      {},
-      req.session.userId
-    );
+    const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites({}, req.session.userId);
 
     res.render("store/home-list", {
       registeredHomes: registeredHomes,
@@ -84,7 +47,6 @@ exports.getHomes = async (req, res, next) => {
   }
 };
 
-// INTENTIONALLY UNCACHED: Bookings are confidential, real-time user transaction records
 exports.getBookings = async (req, res, next) => {
   try {
     const userId = req.session.userId;
@@ -132,7 +94,6 @@ exports.postRemoveBooking = (req, res, next) => {
     });
 };
 
-// INTENTIONALLY UNCACHED: Favourites are user-specific and change dynamically
 exports.getFavouriteList = async (req, res, next) => {
   try {
     const userId = req.session.userId;
@@ -226,36 +187,19 @@ exports.postRemoveFromFavourite = (req, res, next) => {
     });
 };
 
-/**
- * WHAT IS CACHED:
- * - Public property details from Home.findById(homeId).lean().
- * - Key: "home:detail:<homeId>".
- * - TTL: 15 minutes.
- * 
- * WHY SAFE TO CACHE:
- * - Property details (title, price, photo, description) do not change frequently.
- * - User favourite status is queried live separately and NEVER cached.
- * 
- * INVALIDATION:
- * - Invalidate "home:detail:<homeId>" when edited or deleted in hostController.js.
- */
 exports.getHomeDetails = async (req, res, next) => {
   const homeId = req.params.homeId;
   try {
-    // 1. Fetch public home details from cache (or MongoDB on miss)
-    const home = await cache.getOrSet(`home:detail:${homeId}`, HOME_DETAIL_TTL, async () => {
-      return await Home.findById(homeId).lean();
-    });
+    const homePromise = Home.findById(homeId).lean();
+    const favPromise = req.session.userId 
+      ? Favourite.findOne({ houseId: homeId, userId: req.session.userId }).lean() 
+      : Promise.resolve(null);
+    const [home, fav] = await Promise.all([homePromise, favPromise]);
 
     if (!home) {
       console.log("Home not found");
       return res.redirect("/homes");
     }
-
-    // 2. Fetch live user favourite status (never cached)
-    const fav = req.session.userId 
-      ? await Favourite.findOne({ houseId: homeId, userId: req.session.userId }).lean() 
-      : null;
 
     res.render("store/home-detail", {
       home: home,

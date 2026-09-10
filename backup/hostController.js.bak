@@ -1,20 +1,4 @@
 const Home = require("../models/home");
-const cache = require("../utils/cacheUtil");
-
-/**
- * Invalidation Helper:
- * Whenever a home is added, edited, or deleted, invalidate:
- * 1. "homes:index" (homepage catalogue)
- * 2. "homes:all" (/homes catalogue)
- * 3. "home:detail:<homeId>" (if specific homeId provided)
- */
-const invalidateHomeCaches = (homeId = null) => {
-  cache.del("homes:index");
-  cache.del("homes:all");
-  if (homeId) {
-    cache.del(`home:detail:${homeId}`);
-  }
-};
 
 exports.getAddHome = (req, res, next) => {
   res.render("host/edit-home", {
@@ -45,7 +29,6 @@ exports.getEditHome = (req, res, next) => {
   });
 };
 
-// Admin host view - kept live to guarantee administrators always see real-time updates
 exports.getHostHomes = (req, res, next) => {
   Home.find().lean().then((registeredHomes) => {
     res.render("host/host-home-list", {
@@ -57,7 +40,6 @@ exports.getHostHomes = (req, res, next) => {
   });
 };
 
-// CACHE INVALIDATION POINT: Adding a home clears the public homes catalogues
 exports.postAddHome = async (req, res, next) => {
   const { houseName, price, location, rating, photoUrl, description } = req.body;
   try {
@@ -71,16 +53,12 @@ exports.postAddHome = async (req, res, next) => {
     });
     await home.save();
     console.log("Home Saved successfully");
-
-    // Invalidate public catalogues so newly created home appears immediately
-    invalidateHomeCaches();
   } catch (err) {
     console.log("Error while saving home: ", err);
   }
   res.redirect("/host/host-home-list");
 };
 
-// CACHE INVALIDATION POINT: Editing a home clears catalogues and the specific home's detail cache
 exports.postEditHome = async (req, res, next) => {
   const { id, houseName, price, location, rating, photoUrl, description } = req.body;
   try {
@@ -93,27 +71,20 @@ exports.postEditHome = async (req, res, next) => {
       description
     });
     console.log("Home updated ", result?._id || id);
-
-    // Invalidate catalogues and the specific home detail cache
-    invalidateHomeCaches(id);
   } catch (err) {
     console.log("Error while updating home: ", err);
   }
   res.redirect("/host/host-home-list");
 };
 
-// CACHE INVALIDATION POINT: Deleting a home clears catalogues and the deleted home's detail cache
 exports.postDeleteHome = (req, res, next) => {
   const homeId = req.params.homeId;
   console.log("Came to delete ", homeId);
   Home.findByIdAndDelete(homeId)
     .then(() => {
-      // Invalidate catalogues and the deleted home detail cache
-      invalidateHomeCaches(homeId);
       res.redirect("/host/host-home-list");
     })
     .catch((error) => {
       console.log("Error while deleting ", error);
-      res.redirect("/host/host-home-list");
     });
 };
