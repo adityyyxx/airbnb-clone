@@ -28,10 +28,8 @@ const app = express();
 app.use(compression());
 
 // Serve static files FIRST — before session/auth middleware
-// In production, cache static assets for 30 days while keeping 1 day for local development; ETags enabled for cache revalidation
-const isProduction = process.env.NODE_ENV === 'production';
 app.use(express.static(path.join(rootDir, 'public'), {
-  maxAge: isProduction ? '30d' : '1d',
+  maxAge: '1d',
   etag: true
 }));
 
