@@ -15,7 +15,8 @@ authRouter.post("/logout", authController.postLogout);
 
 // Google OAuth Routes
 authRouter.get('/auth/google', passport.authenticate('google', {
-    scope: ['profile', 'email']
+    scope: ['profile', 'email'],
+    prompt: 'select_account'
 }));
 
 authRouter.get('/auth/google/callback', (req, res, next) => {
