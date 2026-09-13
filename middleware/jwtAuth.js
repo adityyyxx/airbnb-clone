@@ -1,5 +1,4 @@
 const jwtUtil = require('../utils/jwtUtil');
-const User = require('../models/user');
 
 module.exports = async (req, res, next) => {
   try {

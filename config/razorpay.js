@@ -17,6 +17,5 @@ const getRazorpayInstance = () => {
 };
 
 module.exports = {
-  getRazorpayInstance,
-  getInstance: getRazorpayInstance
+  getRazorpayInstance
 };
