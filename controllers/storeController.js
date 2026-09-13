@@ -3,8 +3,21 @@ const Favourite = require("../models/favourite");
 const Home = require("../models/home");
 const Booking = require("../models/booking");
 
+const mongoose = require('mongoose');
+
 const fetchHomesAndFavourites = async (homeFilter, userId) => {
   const dbFetchStart = performance.now();
+
+  let mongoPingTime = 0;
+  try {
+    const pingStart = performance.now();
+    if (mongoose.connection && mongoose.connection.db && mongoose.connection.readyState === 1) {
+      await mongoose.connection.db.command({ ping: 1 });
+      mongoPingTime = performance.now() - pingStart;
+    }
+  } catch (pErr) {
+    mongoPingTime = -1;
+  }
 
   const homeQueryStart = performance.now();
   const homesPromise = Home.find(homeFilter).lean().then(res => {
@@ -30,6 +43,7 @@ const fetchHomesAndFavourites = async (homeFilter, userId) => {
     favouriteIds,
     homeQueryTime: homeData.homeQueryTime,
     favouriteQueryTime: favouriteData.favouriteQueryTime,
+    mongoPingTime,
     dbTotalTime
   };
 };
@@ -41,9 +55,12 @@ exports.getIndex = async (req, res, next) => {
       ? ((req._middlewareEndTime || controllerStartTime) - req._startTime)
       : 0;
 
-    const { registeredHomes, favouriteIds, homeQueryTime, favouriteQueryTime, dbTotalTime } = await fetchHomesAndFavourites(
+    const userLookupTime = global._lastUserLookupTime;
+    delete global._lastUserLookupTime;
+
+    const { registeredHomes, favouriteIds, homeQueryTime, favouriteQueryTime, mongoPingTime, dbTotalTime } = await fetchHomesAndFavourites(
       { houseName: { $not: /treehouse/i } },
-      req.session.userId
+      req.session ? req.session.userId : null
     );
 
     const renderStartTime = performance.now();
@@ -62,14 +79,26 @@ exports.getIndex = async (req, res, next) => {
       const totalTime = req._startTime ? (performance.now() - req._startTime) : (performance.now() - controllerStartTime);
 
       if (req.path === '/' && req.method === 'GET') {
+        console.log("--- MIDDLEWARE PIPELINE BREAKDOWN ---");
+        if (req._middlewareTimings && Array.isArray(req._middlewareTimings)) {
+          req._middlewareTimings.forEach(item => {
+            console.log(`⏱️ ${item.name}: ${item.duration.toFixed(2)} ms`);
+          });
+        }
+        if (typeof userLookupTime === 'number') {
+          console.log(`⏱️ User/session lookup (Passport DB): ${userLookupTime.toFixed(2)} ms`);
+        }
+        console.log(`⏱️ TOTAL Middleware time: ${middlewareTime.toFixed(2)} ms`);
+        console.log("--- MONGODB & CONTROLLER BREAKDOWN ---");
+        if (mongoPingTime >= 0) {
+          console.log(`⏱️ MongoDB Ping Latency (Network RTT): ${mongoPingTime.toFixed(2)} ms`);
+        }
         console.log(`⏱️ Home MongoDB query: ${homeQueryTime.toFixed(2)} ms`);
         console.log(`⏱️ Favourite MongoDB query: ${favouriteQueryTime.toFixed(2)} ms`);
         console.log(`⏱️ Database fetching total: ${dbTotalTime.toFixed(2)} ms`);
         console.log(`⏱️ EJS rendering: ${ejsRenderTime.toFixed(2)} ms`);
-        if (req._startTime) {
-          console.log(`⏱️ Middleware time: ${middlewareTime.toFixed(2)} ms`);
-        }
         console.log(`⏱️ TOTAL GET /: ${totalTime.toFixed(2)} ms`);
+        console.log("---------------------------------------");
       }
 
       res.send(html);

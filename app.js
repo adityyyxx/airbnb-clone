@@ -26,56 +26,130 @@ const { performance } = require('perf_hooks');
 
 const app = express();
 
-// Top-level request timing middleware for GET /
+const crypto = require('crypto');
+
+// Top-level request timing & debugging middleware for GET /
 app.use((req, res, next) => {
-  if (req.path === '/' && req.method === 'GET') {
-    req._startTime = performance.now();
-    console.log("🏠 GET / started");
+  const reqId = crypto.randomBytes(3).toString('hex');
+  req._reqId = reqId;
+  req._startTime = performance.now();
+  req._middlewareTimings = [];
+
+  const timestamp = new Date().toISOString();
+  const referer = req.headers['referer'] || req.headers['referrer'] || 'none';
+  const userAgent = req.headers['user-agent'] || 'none';
+  const secFetchDest = req.headers['sec-fetch-dest'] || 'unknown';
+  const secFetchMode = req.headers['sec-fetch-mode'] || 'unknown';
+  const secFetchSite = req.headers['sec-fetch-site'] || 'unknown';
+  const secPurpose = req.headers['sec-purpose'] || req.headers['purpose'] || 'none';
+
+  let navType = 'Browser Navigation';
+  if (secPurpose.toLowerCase().includes('prefetch') || secPurpose.toLowerCase().includes('prerender')) {
+    navType = `Prefetch/Prerender (${secPurpose})`;
+  } else if (secFetchDest !== 'document' && secFetchDest !== 'unknown') {
+    navType = `Resource Request (${secFetchDest})`;
+  } else if (secFetchMode === 'cors' || req.xhr) {
+    navType = 'AJAX / Fetch Request';
+  } else if (userAgent.toLowerCase().includes('render') || userAgent.toLowerCase().includes('curl') || userAgent.toLowerCase().includes('uptime') || userAgent.toLowerCase().includes('health')) {
+    navType = 'HealthCheck / Proxy / Bot';
   }
+
+  if (req.path === '/' && req.method === 'GET') {
+    console.log(`\n🔵 REQUEST START`);
+    console.log(`ID: ${reqId}`);
+    console.log(`TIME: ${timestamp}`);
+    console.log(`METHOD: ${req.method}`);
+    console.log(`URL: ${req.originalUrl || req.url}`);
+    console.log(`REFERER: ${referer}`);
+    console.log(`USER-AGENT: ${userAgent}`);
+    console.log(`DESTINATION: ${secFetchDest} | MODE: ${secFetchMode} | SITE: ${secFetchSite}`);
+    console.log(`NAVIGATION TYPE: ${navType}`);
+  }
+
+  // Instrument res.redirect to log any redirect targeted at / or originating from /
+  const originalRedirect = res.redirect.bind(res);
+  res.redirect = function(url) {
+    let target = url;
+    if (typeof url === 'number') {
+      target = arguments[1];
+    }
+    if (target === '/' || req.path === '/') {
+      console.log(`🔀 REDIRECT TRIGGERED [Req ID ${reqId}]: From "${req.originalUrl || req.url}" to "${target}" (Referer: ${referer})`);
+    }
+    return originalRedirect.apply(this, arguments);
+  };
+
+  // Log request end when response finishes
+  res.on('finish', () => {
+    if (req.path === '/' && req.method === 'GET') {
+      const totalMs = (performance.now() - req._startTime).toFixed(2);
+      console.log(`🔴 REQUEST END`);
+      console.log(`ID: ${reqId}`);
+      console.log(`STATUS: ${res.statusCode}`);
+      console.log(`TOTAL: ${totalMs} ms\n`);
+    }
+  });
+
   next();
 });
 
+// Helper function to instrument middleware execution
+const trackMiddleware = (name, middlewareFn) => {
+  return (req, res, next) => {
+    const start = performance.now();
+    middlewareFn(req, res, (err) => {
+      const duration = performance.now() - start;
+      if (req.path === '/' && req.method === 'GET') {
+        req._middlewareTimings = req._middlewareTimings || [];
+        req._middlewareTimings.push({ name, duration });
+      }
+      next(err);
+    });
+  };
+};
+
 // Gzip compress all responses for faster transfers
-app.use(compression());
+app.use(trackMiddleware('Compression middleware', compression()));
 
 // Serve static files FIRST — before session/auth middleware
-app.use(express.static(path.join(rootDir, 'public'), {
+app.use(trackMiddleware('Static files middleware', express.static(path.join(rootDir, 'public'), {
   maxAge: '1d',
   etag: true
-}));
+})));
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 // JSON parser with raw body buffer capture for Webhook HMAC signature verification
-app.use(express.json({
+app.use(trackMiddleware('JSON parser middleware', express.json({
   verify: (req, res, buf) => {
     req.rawBody = buf;
   }
-}));
+})));
 
-app.use(express.urlencoded({ extended: false }));
+app.use(trackMiddleware('Urlencoded parser middleware', express.urlencoded({ extended: false })));
 
 const store = new MongoDBStore({
   uri: process.env.MONGODB_URI || DB_PATH,
   collection: 'sessions'
 });
 
-app.use(session({
+app.use(trackMiddleware('Session middleware', session({
   secret: process.env.SESSION_SECRET || "KnowledgeGate AI with Complete Coding",
   resave: false,
   saveUninitialized: false,
   store
-}));
+})));
 
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(trackMiddleware('Passport initialize', passport.initialize()));
+app.use(trackMiddleware('Passport session', passport.session()));
 
 app.use((req, res, next) => {
-  req.isLoggedIn = req.session.isLoggedIn || false;
-  req.userRole = req.session.userRole || null;
-  req.userName = req.session.userName || null;
-  req.userId = req.session.userId || null;
+  const start = performance.now();
+  req.isLoggedIn = req.session ? req.session.isLoggedIn || false : false;
+  req.userRole = req.session ? req.session.userRole || null : null;
+  req.userName = req.session ? req.session.userName || null : null;
+  req.userId = req.session ? req.session.userId || null : null;
   
   // Make available to all EJS templates
   res.locals.userRole = req.userRole;
@@ -83,7 +157,11 @@ app.use((req, res, next) => {
   res.locals.isLoggedIn = req.isLoggedIn;
   res.locals.userId = req.userId;
   res.locals.razorpayKeyId = process.env.RAZORPAY_KEY_ID || '';
+
+  const duration = performance.now() - start;
   if (req.path === '/' && req.method === 'GET') {
+    req._middlewareTimings = req._middlewareTimings || [];
+    req._middlewareTimings.push({ name: 'Locals setup', duration });
     req._middlewareEndTime = performance.now();
   }
   next();

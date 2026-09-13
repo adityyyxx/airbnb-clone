@@ -45,7 +45,10 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
+    const { performance } = require('perf_hooks');
+    const dbLookupStart = performance.now();
     User.findById(id).then(user => {
+        global._lastUserLookupTime = performance.now() - dbLookupStart;
         done(null, user);
     }).catch(err => {
         done(err, null);
