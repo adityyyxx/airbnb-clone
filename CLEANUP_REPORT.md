@@ -1,6 +1,6 @@
 # Project Cleanup Audit Report
 
-**Project**: `chapter10 airbnb`  
+**Project**: `chapter10 stayaway`  
 **Date**: September 13, 2026  
 **Status**: Phase 1 Audit Complete — Awaiting User Approval before any Deletions.
 

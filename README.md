@@ -1,12 +1,12 @@
-# Airbnb Clone — Property Booking Platform
+# StayAway Clone — Property Booking Platform
 
-A full-stack Airbnb-style property booking platform built using **Node.js**, **Express**, **MongoDB**, and **EJS**. Users can browse properties, explore categories and experiences, select booking dates, manage wishlists, and reserve accommodations through a secure, end-to-end checkout flow.
+A full-stack StayAway-style property booking platform built using **Node.js**, **Express**, **MongoDB**, and **EJS**. Users can browse properties, explore categories and experiences, select booking dates, manage wishlists, and reserve accommodations through a secure, end-to-end checkout flow.
 
 ---
 
 ## 📌 Project Overview
 
-I built an Airbnb-style property booking platform using Node.js, Express, MongoDB, and EJS. Users can browse properties, select dates, and create bookings.
+I built a StayAway-style property booking platform using Node.js, Express, MongoDB, and EJS. Users can browse properties, select dates, and create bookings.
 
 The major enhancement I implemented was a secure Razorpay payment workflow. The backend calculates the booking amount from database prices instead of trusting the client, creates a Razorpay order, and uses webhooks with HMAC signature verification to confirm payments.
 
@@ -81,7 +81,7 @@ I wrote tests for important payment scenarios such as signature verification and
 ### 1. Clone & Install Dependencies
 ```bash
 git clone <repository-url>
-cd chapter10-airbnb
+cd chapter10-stayaway
 npm install
 ```
 

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'airbnb_jwt_fallback_secret_keepcoding_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'stayaway_jwt_fallback_secret_keepcoding_2026';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 /**

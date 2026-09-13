@@ -68,7 +68,7 @@ exports.getIndex = async (req, res, next) => {
     res.render("store/index", {
       registeredHomes: registeredHomes,
       favouriteIds: favouriteIds,
-      pageTitle: "airbnb Home",
+      pageTitle: "StayAway Home",
       currentPage: "index",
       isLoggedIn: req.isLoggedIn,
     }, (err, html) => {

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   AIRBNB CLONE — PREMIUM DESIGN SYSTEM
+   STAYAWAY CLONE — PREMIUM DESIGN SYSTEM
    ═══════════════════════════════════════════════ */
 
 /* ── CSS Variables ── */
@@ -1485,7 +1485,7 @@ textarea.form-input {
   right: -12px;
 }
 
-/* ── Listing Card (Airbnb-style small) ── */
+/* ── Listing Card (StayAway-style small) ── */
 .listing-card {
   flex-shrink: 0;
   width: 240px;
