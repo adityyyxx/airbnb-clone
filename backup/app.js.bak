@@ -22,18 +22,7 @@ const rootDir = require("./utils/pathUtil");
 const errorsController = require("./controllers/errors");
 const passport = require('./utils/passport-config');
 
-const { performance } = require('perf_hooks');
-
 const app = express();
-
-// Top-level request timing middleware for GET /
-app.use((req, res, next) => {
-  if (req.path === '/' && req.method === 'GET') {
-    req._startTime = performance.now();
-    console.log("🏠 GET / started");
-  }
-  next();
-});
 
 // Gzip compress all responses for faster transfers
 app.use(compression());
@@ -83,9 +72,6 @@ app.use((req, res, next) => {
   res.locals.isLoggedIn = req.isLoggedIn;
   res.locals.userId = req.userId;
   res.locals.razorpayKeyId = process.env.RAZORPAY_KEY_ID || '';
-  if (req.path === '/' && req.method === 'GET') {
-    req._middlewareEndTime = performance.now();
-  }
   next();
 });
 

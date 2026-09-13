@@ -1,52 +1,21 @@
-const { performance } = require('perf_hooks');
 const Favourite = require("../models/favourite");
 const Home = require("../models/home");
 const Booking = require("../models/booking");
 
 const fetchHomesAndFavourites = async (homeFilter, userId) => {
-  const dbFetchStart = performance.now();
-
-  const homeQueryStart = performance.now();
-  const homesPromise = Home.find(homeFilter).lean().then(res => {
-    const homeQueryTime = performance.now() - homeQueryStart;
-    return { res, homeQueryTime };
-  });
-
-  const favouriteQueryStart = performance.now();
-  const favouritesPromise = (userId ? Favourite.find({ userId }).lean() : Promise.resolve([]))
-    .then(res => {
-      const favouriteQueryTime = performance.now() - favouriteQueryStart;
-      return { res, favouriteQueryTime };
-    });
-
-  const [homeData, favouriteData] = await Promise.all([homesPromise, favouritesPromise]);
-  const dbTotalTime = performance.now() - dbFetchStart;
-
-  const registeredHomes = homeData.res;
-  const favouriteIds = favouriteData.res.map(f => f.houseId.toString());
-
-  return {
-    registeredHomes,
-    favouriteIds,
-    homeQueryTime: homeData.homeQueryTime,
-    favouriteQueryTime: favouriteData.favouriteQueryTime,
-    dbTotalTime
-  };
+  const homesPromise = Home.find(homeFilter).lean();
+  const favouritesPromise = userId ? Favourite.find({ userId }).lean() : Promise.resolve([]);
+  const [registeredHomes, favourites] = await Promise.all([homesPromise, favouritesPromise]);
+  const favouriteIds = favourites.map(f => f.houseId.toString());
+  return { registeredHomes, favouriteIds };
 };
 
 exports.getIndex = async (req, res, next) => {
   try {
-    const controllerStartTime = performance.now();
-    const middlewareTime = req._startTime
-      ? ((req._middlewareEndTime || controllerStartTime) - req._startTime)
-      : 0;
-
-    const { registeredHomes, favouriteIds, homeQueryTime, favouriteQueryTime, dbTotalTime } = await fetchHomesAndFavourites(
+    const { registeredHomes, favouriteIds } = await fetchHomesAndFavourites(
       { houseName: { $not: /treehouse/i } },
       req.session.userId
     );
-
-    const renderStartTime = performance.now();
 
     res.render("store/index", {
       registeredHomes: registeredHomes,
@@ -54,25 +23,6 @@ exports.getIndex = async (req, res, next) => {
       pageTitle: "airbnb Home",
       currentPage: "index",
       isLoggedIn: req.isLoggedIn,
-    }, (err, html) => {
-      if (err) {
-        return next(err);
-      }
-      const ejsRenderTime = performance.now() - renderStartTime;
-      const totalTime = req._startTime ? (performance.now() - req._startTime) : (performance.now() - controllerStartTime);
-
-      if (req.path === '/' && req.method === 'GET') {
-        console.log(`⏱️ Home MongoDB query: ${homeQueryTime.toFixed(2)} ms`);
-        console.log(`⏱️ Favourite MongoDB query: ${favouriteQueryTime.toFixed(2)} ms`);
-        console.log(`⏱️ Database fetching total: ${dbTotalTime.toFixed(2)} ms`);
-        console.log(`⏱️ EJS rendering: ${ejsRenderTime.toFixed(2)} ms`);
-        if (req._startTime) {
-          console.log(`⏱️ Middleware time: ${middlewareTime.toFixed(2)} ms`);
-        }
-        console.log(`⏱️ TOTAL GET /: ${totalTime.toFixed(2)} ms`);
-      }
-
-      res.send(html);
     });
   } catch (err) {
     console.error("Error in getIndex:", err);
