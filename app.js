@@ -129,6 +129,30 @@ app.use(trackMiddleware('JSON parser middleware', express.json({
 
 app.use(trackMiddleware('Urlencoded parser middleware', express.urlencoded({ extended: false })));
 
+// Production-ready Health Check Endpoint (unauthenticated, lightweight, zero session/auth overhead)
+app.get('/health', (req, res) => {
+  try {
+    const isDbConnected = mongoose.connection && mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      return res.status(200).json({
+        status: "ok",
+        database: "connected"
+      });
+    }
+
+    return res.status(503).json({
+      status: "error",
+      database: "disconnected"
+    });
+  } catch (error) {
+    return res.status(503).json({
+      status: "error",
+      database: "disconnected"
+    });
+  }
+});
+
 const store = new MongoDBStore({
   uri: process.env.MONGODB_URI || DB_PATH,
   collection: 'sessions'
