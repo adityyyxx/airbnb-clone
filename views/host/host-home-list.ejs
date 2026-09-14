@@ -27,7 +27,7 @@
               <div class="card animate-fade-in-up stagger-<%= (index % 6) + 1 %>">
                 <div class="card-image-wrapper">
                   <% if (home.photoUrl) { %>
-                    <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>">
+                    <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80'">
                     <% } else { %>
                       <div class="no-image">No image available</div>
                       <% } %>

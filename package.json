@@ -7,6 +7,7 @@
     "test": "jest --detectOpenHandles --forceExit",
     "tailwind": "npx @tailwindcss/cli -i ./views/input.css -o ./public/output.css --watch",
     "build": "npx @tailwindcss/cli -i ./views/input.css -o ./public/output.css",
+    "seed": "node data/seed-homes.js",
     "start": "node app.js"
   },
   "keywords": [],
