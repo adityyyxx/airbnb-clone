@@ -55,20 +55,57 @@ exports.getHostHomes = (req, res, next) => {
 exports.postAddHome = async (req, res, next) => {
   const { houseName, price, location, rating, photoUrl, description } = req.body;
 
+  const numPrice = Number(price);
+  const numRating = Number(rating);
+
+  const errors = [];
+  if (req.uploadError) {
+    errors.push(req.uploadError);
+  }
+  if (!houseName || typeof houseName !== 'string' || !houseName.trim()) {
+    errors.push("House name is required.");
+  }
+  if (!location || typeof location !== 'string' || !location.trim()) {
+    errors.push("Location is required.");
+  }
+  if (isNaN(numPrice) || !isFinite(numPrice) || numPrice < 0) {
+    errors.push("Price must be a valid non-negative number.");
+  }
+  if (isNaN(numRating) || !isFinite(numRating) || numRating < 0 || numRating > 5) {
+    errors.push("Rating must be a valid number between 0 and 5.");
+  }
+
+  // Determine Image Strategy:
+  // 1. Uploaded File (req.file) takes highest priority if provided
+  // 2. Photo URL if provided
+  // 3. Default image fallback
+  let finalPhotoUrl = '';
+  if (req.file) {
+    finalPhotoUrl = `/uploads/${req.file.filename}`;
+  } else if (typeof photoUrl === 'string' && photoUrl.trim()) {
+    finalPhotoUrl = photoUrl.trim();
+  } else {
+    finalPhotoUrl = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80';
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).render("host/edit-home", {
+      pageTitle: "Add Home to StayAway",
+      currentPage: "addHome",
+      editing: false,
+      home: { houseName, price, location, rating, photoUrl, description },
+      isLoggedIn: req.isLoggedIn,
+      errorMessage: errors.join(" ")
+    });
+  }
+
   try {
-    const numPrice = Number(price);
-    const numRating = Number(rating);
-
-    if (!houseName || isNaN(numPrice) || numPrice <= 0 || !location) {
-      return res.redirect("/host/add-home");
-    }
-
     const home = new Home({
       houseName: houseName.trim(),
       price: numPrice,
       location: location.trim(),
-      rating: isNaN(numRating) ? 0 : Math.min(5, Math.max(0, numRating)),
-      photoUrl: typeof photoUrl === 'string' ? photoUrl.trim() : '',
+      rating: numRating,
+      photoUrl: finalPhotoUrl,
       description: typeof description === 'string' ? description.trim() : '',
     });
     await home.save();
@@ -84,28 +121,67 @@ exports.postEditHome = async (req, res, next) => {
   const { id, houseName, price, location, rating, photoUrl, description } = req.body;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.redirect("/host/host-home-list");
+    return res.status(400).redirect("/host/host-home-list");
   }
 
   try {
+    const existingHome = await Home.findById(id).lean();
+    if (!existingHome) {
+      return res.status(404).redirect("/host/host-home-list");
+    }
+
     const numPrice = Number(price);
     const numRating = Number(rating);
 
+    const errors = [];
+    if (req.uploadError) {
+      errors.push(req.uploadError);
+    }
+    if (!houseName || typeof houseName !== 'string' || !houseName.trim()) {
+      errors.push("House name is required.");
+    }
+    if (!location || typeof location !== 'string' || !location.trim()) {
+      errors.push("Location is required.");
+    }
+    if (isNaN(numPrice) || !isFinite(numPrice) || numPrice < 0) {
+      errors.push("Price must be a valid non-negative number.");
+    }
+    if (isNaN(numRating) || !isFinite(numRating) || numRating < 0 || numRating > 5) {
+      errors.push("Rating must be a valid number between 0 and 5.");
+    }
+
+    // Determine Image Strategy:
+    // 1. Uploaded File (req.file) takes highest priority if provided
+    // 2. Newly provided Photo URL (if non-empty)
+    // 3. Preserve existing home.photoUrl
+    let finalPhotoUrl = existingHome.photoUrl;
+    if (req.file) {
+      finalPhotoUrl = `/uploads/${req.file.filename}`;
+    } else if (typeof photoUrl === 'string' && photoUrl.trim()) {
+      finalPhotoUrl = photoUrl.trim();
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).render("host/edit-home", {
+        pageTitle: "Edit your Home",
+        currentPage: "host-homes",
+        editing: true,
+        home: { _id: id, houseName, price, location, rating, photoUrl, description },
+        isLoggedIn: req.isLoggedIn,
+        errorMessage: errors.join(" ")
+      });
+    }
+
     const updateData = {
-      houseName: typeof houseName === 'string' ? houseName.trim() : '',
-      location: typeof location === 'string' ? location.trim() : '',
-      photoUrl: typeof photoUrl === 'string' ? photoUrl.trim() : '',
+      houseName: houseName.trim(),
+      price: numPrice,
+      location: location.trim(),
+      rating: numRating,
+      photoUrl: finalPhotoUrl,
       description: typeof description === 'string' ? description.trim() : ''
     };
 
-    if (!isNaN(numPrice) && numPrice > 0) {
-      updateData.price = numPrice;
-    }
-    if (!isNaN(numRating)) {
-      updateData.rating = Math.min(5, Math.max(0, numRating));
-    }
-
-    const result = await Home.findByIdAndUpdate(id, updateData, { new: true });
+    const result = await Home.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     console.log("Home updated:", result?._id || id);
     res.redirect("/host/host-home-list");
   } catch (err) {

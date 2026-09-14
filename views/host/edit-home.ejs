@@ -16,7 +16,12 @@
 
         <div class="animate-fade-in-up"
           style="background:var(--bg-primary); border-radius:var(--radius-md); padding:32px; box-shadow:var(--shadow-md); border:1px solid var(--border-light);">
-          <form action="/host/<%= editing ? 'edit-home' : 'add-home' %>" method="POST">
+          <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+            <div style="background-color: #fee2e2; border: 1px solid #f87171; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
+              <%= errorMessage %>
+            </div>
+          <% } %>
+          <form action="/host/<%= editing ? 'edit-home' : 'add-home' %>" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="id" value="<%= editing ? home._id : '' %>" />
 
             <div class="form-group">
@@ -76,19 +81,35 @@
                 placeholder="e.g. Manali, Himachal Pradesh" required />
             </div>
 
-            <div class="form-group">
-              <label class="form-label">
-                <span style="display:flex;align-items:center;gap:6px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                  Photo URL
-                </span>
-              </label>
-              <input type="url" name="photoUrl" value="<%= editing ? home.photoUrl : '' %>" class="form-input"
-                placeholder="https://images.example.com/photo.jpg" />
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">
+                  <span style="display:flex;align-items:center;gap:6px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    Option A: Photo URL
+                  </span>
+                </label>
+                <input type="url" name="photoUrl" value="<%= editing ? home.photoUrl : '' %>" class="form-input"
+                  placeholder="https://images.example.com/photo.jpg" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <span style="display:flex;align-items:center;gap:6px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Option B: Upload Photo
+                  </span>
+                </label>
+                <input type="file" name="image" accept="image/*" class="form-input" style="padding: 8px;" />
+              </div>
             </div>
 
             <div class="form-group">

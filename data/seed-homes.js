@@ -507,7 +507,7 @@ async function seedHomes() {
       const result = await Home.updateOne(
         { houseName: homeData.houseName, location: homeData.location },
         { $set: homeData },
-        { upsert: true }
+        { upsert: true, runValidators: true }
       );
 
       if (result.upsertedCount > 0) {
