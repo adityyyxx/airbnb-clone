@@ -206,11 +206,15 @@
 
                             <div class="form-group">
                                 <label>Password</label>
-                                <input type="password" name="password" class="form-input"
-                                    placeholder="Enter your password" required />
+                                <input type="password" name="password" id="passwordInput" class="form-input"
+                                    placeholder="Enter your password (min 4 characters)" required minlength="4" />
                             </div>
 
-                            <input type="hidden" name="confirmPassword" id="confirmPasswordHidden" />
+                            <div class="form-group">
+                                <label>Confirm Password</label>
+                                <input type="password" name="confirmPassword" id="confirmPasswordInput" class="form-input"
+                                    placeholder="Confirm your password" required minlength="4" />
+                            </div>
 
                             <button type="submit" class="auth-btn btn-primary">Sign Up</button>
 
@@ -226,11 +230,17 @@
         </div>
 
         <script>
-            document.querySelector('form').addEventListener('submit', function () {
-                const pwd = document.querySelector('input[name="password"]').value;
-                const confirm = document.getElementById('confirmPasswordHidden');
-                if (confirm) confirm.value = pwd;
-            });
+            const form = document.querySelector('.auth-form');
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    const pwd = document.getElementById('passwordInput').value;
+                    const confirm = document.getElementById('confirmPasswordInput').value;
+                    if (pwd !== confirm) {
+                        e.preventDefault();
+                        alert('Passwords do not match. Please check your password.');
+                    }
+                });
+            }
         </script>
     </body>
 

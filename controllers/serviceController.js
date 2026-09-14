@@ -24,5 +24,8 @@ exports.getServices = (req, res, next) => {
       currentPage: "services",
       isLoggedIn: req.isLoggedIn,
     });
+  }).catch(err => {
+    console.error("Error fetching services: ", err);
+    next(err);
   });
 };

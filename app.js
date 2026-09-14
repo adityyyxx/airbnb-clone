@@ -9,7 +9,7 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const DB_PATH = "mongodb+srv://root:aditya123@keepcoding.xp3rkci.mongodb.net/?retryWrites=true&w=majority&appName=KeepCoding";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 // Local Module
 const storeRouter = require("./routes/storeRouter");
@@ -154,7 +154,7 @@ app.get('/health', (req, res) => {
 });
 
 const store = new MongoDBStore({
-  uri: process.env.MONGODB_URI || DB_PATH,
+  uri: MONGODB_URI,
   collection: 'sessions'
 });
 
@@ -162,7 +162,13 @@ app.use(trackMiddleware('Session middleware', session({
   secret: process.env.SESSION_SECRET || "KnowledgeGate AI with Complete Coding",
   resave: false,
   saveUninitialized: false,
-  store
+  store,
+  cookie: {
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production'
+  }
 })));
 
 app.use(trackMiddleware('Passport initialize', passport.initialize()));
@@ -210,10 +216,34 @@ app.use("/host", hostRouter);
 
 app.use(errorsController.pageNotFound);
 
+// Centralized error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Unhandled Application Error:", err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  const isAjax = req.xhr || req.headers.accept?.includes('application/json') || req.path?.startsWith('/api/');
+  if (isAjax) {
+    return res.status(err.status || 500).json({
+      success: false,
+      message: err.message || 'Internal Server Error'
+    });
+  }
+  res.status(err.status || 500).render("404", {
+    pageTitle: "Error Occurred",
+    currentPage: "error",
+    isLoggedIn: req.isLoggedIn || false
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV !== 'test') {
-  mongoose.connect(process.env.MONGODB_URI || DB_PATH).then(() => {
+  if (!MONGODB_URI) {
+    console.error('FATAL: MONGODB_URI is not defined in environment variables.');
+    process.exit(1);
+  }
+  mongoose.connect(MONGODB_URI).then(() => {
     console.log('Connected to Mongo');
     app.listen(PORT, () => {
       console.log(`Server running on address http://localhost:${PORT}`);

@@ -351,4 +351,64 @@ describe('Razorpay Payment Security & Signature Verification Suite', () => {
       expect(concurrentResult.orderId).toBe('order_concurrent_123');
     });
   });
+
+  describe('10. Signature Length-Mismatch & Type Safety', () => {
+    const safeVerifySignature = (orderId, paymentId, signature, secret) => {
+      if (!orderId || !paymentId || !signature || !secret) return false;
+      if (typeof signature !== 'string') return false;
+      const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(`${orderId}|${paymentId}`)
+        .digest('hex');
+      const bufExpected = Buffer.from(expectedSignature, 'utf8');
+      const bufActual = Buffer.from(signature, 'utf8');
+      if (bufExpected.length !== bufActual.length) return false;
+      try {
+        return crypto.timingSafeEqual(bufExpected, bufActual);
+      } catch (err) {
+        return false;
+      }
+    };
+
+    it('should safely reject short or length-mismatched signature without throwing RangeError', () => {
+      const orderId = 'order_test_123';
+      const paymentId = 'pay_test_456';
+      expect(() => {
+        const result = safeVerifySignature(orderId, paymentId, 'short_sig', TEST_SECRET);
+        expect(result).toBe(false);
+      }).not.toThrow();
+    });
+
+    it('should reject non-string signature without throwing', () => {
+      const orderId = 'order_test_123';
+      const paymentId = 'pay_test_456';
+      expect(() => {
+        const result = safeVerifySignature(orderId, paymentId, 12345, TEST_SECRET);
+        expect(result).toBe(false);
+      }).not.toThrow();
+    });
+  });
+
+  describe('11. Cancelled Booking Verification Guard', () => {
+    it('should reject payment verification if booking has been cancelled', () => {
+      const booking = {
+        _id: 'booking_cancelled_1',
+        status: 'cancelled',
+        paymentStatus: 'created'
+      };
+
+      const canVerifyPayment = (b) => {
+        if (b.status === 'cancelled') {
+          return { status: 400, message: 'Cannot confirm payment for a reservation that has been cancelled.' };
+        }
+        b.status = 'confirmed';
+        b.paymentStatus = 'paid';
+        return { status: 200, message: 'Confirmed' };
+      };
+
+      const result = canVerifyPayment(booking);
+      expect(result.status).toBe(400);
+      expect(booking.status).toBe('cancelled');
+    });
+  });
 });

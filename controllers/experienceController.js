@@ -45,25 +45,41 @@ exports.getAddExperience = (req, res, next) => {
 // Handle form submission to create a new experience
 exports.postAddExperience = (req, res, next) => {
   const { title, host, category, price, duration, location, rating, photoUrl, description, isPopular, maxGuests } = req.body;
+
+  const validCategories = [
+    'Adventure', 'Food & Drink', 'Art & Culture', 
+    'Wellness', 'Nature', 'Music', 'Sports', 'Nightlife'
+  ];
+
+  const safeCategory = validCategories.includes(category) ? category : 'Adventure';
+  const numPrice = Number(price);
+  const numRating = Number(rating);
+  const numGuests = parseInt(maxGuests, 10);
+
+  if (!title || !host || !location || isNaN(numPrice) || numPrice <= 0) {
+    return res.redirect('/experiences/add');
+  }
+
   const newExp = new Experience({
-    title,
-    host,
-    category,
-    price,
-    duration,
-    location,
-    rating,
-    photoUrl,
-    description,
+    title: title.trim(),
+    host: host.trim(),
+    category: safeCategory,
+    price: numPrice,
+    duration: typeof duration === 'string' ? duration.trim() : '1 hour',
+    location: location.trim(),
+    rating: isNaN(numRating) ? 0 : Math.min(5, Math.max(0, numRating)),
+    photoUrl: typeof photoUrl === 'string' ? photoUrl.trim() : '',
+    description: typeof description === 'string' ? description.trim() : '',
     isPopular: isPopular === 'on' || isPopular === true,
-    maxGuests,
+    maxGuests: isNaN(numGuests) || numGuests < 1 ? 1 : numGuests,
   });
+
   newExp.save()
     .then(() => {
       res.redirect('/experiences');
     })
     .catch(err => {
-      console.log('Error saving experience:', err);
+      console.error('Error saving experience:', err);
       next(err);
     });
 };

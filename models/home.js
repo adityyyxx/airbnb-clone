@@ -23,12 +23,15 @@ const homeSchema = mongoose.Schema({
   description: String,
 });
 
-homeSchema.pre('findOneAndDelete', async function(next) {
-  console.log('Came to pre hook while deleting a home');
-  const homeId = this.getQuery()._id;
-  await favourite.deleteMany({houseId: homeId});
-  await booking.deleteMany({houseId: homeId});
-  next();
+homeSchema.pre('findOneAndDelete', async function() {
+  const query = this.getQuery();
+  const homeId = query._id;
+  if (homeId) {
+    await Promise.all([
+      favourite.deleteMany({ houseId: homeId }),
+      booking.deleteMany({ houseId: homeId })
+    ]);
+  }
 });
 
 module.exports = mongoose.model('Home', homeSchema);

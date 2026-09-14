@@ -26,14 +26,19 @@ const calculateNights = (checkInStr, checkOutStr) => {
  */
 const verifyCheckoutSignature = (orderId, paymentId, signature, secret) => {
   if (!orderId || !paymentId || !signature || !secret) return false;
+  if (typeof signature !== 'string') return false;
   const expectedSignature = crypto
     .createHmac('sha256', secret)
     .update(`${orderId}|${paymentId}`)
     .digest('hex');
-  return crypto.timingSafeEqual(
-    Buffer.from(expectedSignature, 'utf8'),
-    Buffer.from(signature, 'utf8')
-  );
+  const bufExpected = Buffer.from(expectedSignature, 'utf8');
+  const bufActual = Buffer.from(signature, 'utf8');
+  if (bufExpected.length !== bufActual.length) return false;
+  try {
+    return crypto.timingSafeEqual(bufExpected, bufActual);
+  } catch (err) {
+    return false;
+  }
 };
 
 /**
@@ -87,6 +92,13 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Missing required booking details (houseId, checkIn, checkOut).'
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(houseId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid property ID format.'
       });
     }
 
@@ -204,6 +216,12 @@ exports.createOrder = async (req, res) => {
       await transaction.save();
     } catch (saveErr) {
       if (saveErr.code === 11000 && idempotencyKey) {
+        // Clean up duplicate pending booking created in this attempt
+        try {
+          await Booking.findByIdAndDelete(booking._id);
+        } catch (cleanupErr) {
+          console.error('Failed to cleanup duplicate booking on idempotency collision:', cleanupErr);
+        }
         if (await respondWithExistingOrder(idempotencyKey, userId, res, {
           bookingId: booking._id,
           houseName: home.houseName,
@@ -336,10 +354,19 @@ exports.verifyPayment = async (req, res) => {
       : await bookingQuery;
 
     if (!booking) {
-      if (useTransactions) await session.abortTransaction();
+      if (useTransactions && session && session.inTransaction()) await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: 'Associated booking not found.'
+      });
+    }
+
+    // Do not confirm a cancelled booking
+    if (booking.status === 'cancelled') {
+      if (useTransactions && session && session.inTransaction()) await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot confirm payment for a reservation that has been cancelled.'
       });
     }
 
@@ -568,12 +595,32 @@ exports.handleWebhook = async (req, res) => {
       }
     }
 
+    // Cleanly commit any transaction if still in progress before responding
+    if (useTransactions && session && session.inTransaction()) {
+      await session.commitTransaction();
+    }
+
     return res.status(200).json({ status: 'ok', received: true });
   } catch (error) {
-    if (useTransactions && session) await session.abortTransaction();
+    if (useTransactions && session && session.inTransaction()) {
+      try {
+        await session.abortTransaction();
+      } catch (abortErr) {
+        console.error('Error aborting webhook transaction:', abortErr);
+      }
+    }
     console.error('Webhook Processing Error:', error);
     return res.status(500).json({ status: 'error', message: error.message });
   } finally {
-    if (session) session.endSession();
+    if (session) {
+      try {
+        if (useTransactions && session.inTransaction()) {
+          await session.abortTransaction();
+        }
+      } catch (cleanupErr) {
+        // Ignore abort error on ended session
+      }
+      await session.endSession();
+    }
   }
 };

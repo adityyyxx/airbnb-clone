@@ -1,76 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
+<%- include('../partials/head') %>
+  </head>
 
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Experience</title>
-    <link rel="stylesheet" href="/home.css" />
-</head>
+  <body>
+    <%- include('../partials/nav') %>
 
-<body>
-    <% include ../partials/nav %>
-        <main class="container">
-            <h1 class="page-title">Add a New Experience</h1>
-            <form action="/experiences/add" method="POST" class="experience-form">
-                <div class="form-group">
-                    <label for="title">Title</label>
-                    <input type="text" id="title" name="title" required />
-                </div>
-                <div class="form-group">
-                    <label for="host">Host</label>
-                    <input type="text" id="host" name="host" required />
-                </div>
-                <div class="form-group">
-                    <label for="category">Category</label>
-                    <select id="category" name="category" required>
-                        <option value="Adventure">Adventure</option>
-                        <option value="Food &amp; Drink">Food &amp; Drink</option>
-                        <option value="Art &amp; Culture">Art &amp; Culture</option>
-                        <option value="Wellness">Wellness</option>
-                        <option value="Nature">Nature</option>
-                        <option value="Music">Music</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Nightlife">Nightlife</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="price">Price (₹)</label>
-                    <input type="number" id="price" name="price" step="0.01" required />
-                </div>
-                <div class="form-group">
-                    <label for="duration">Duration (hours)</label>
-                    <input type="number" id="duration" name="duration" step="0.5" required />
-                </div>
-                <div class="form-group">
-                    <label for="location">Location</label>
-                    <input type="text" id="location" name="location" required />
-                </div>
-                <div class="form-group">
-                    <label for="rating">Rating (1-5)</label>
-                    <input type="number" id="rating" name="rating" min="1" max="5" step="0.1" required />
-                </div>
-                <div class="form-group">
-                    <label for="photoUrl">Photo URL</label>
-                    <input type="url" id="photoUrl" name="photoUrl" required />
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="4" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="maxGuests">Max Guests</label>
-                    <input type="number" id="maxGuests" name="maxGuests" required />
-                </div>
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="isPopular" name="isPopular" />
-                    <label for="isPopular">Mark as Popular</label>
-                </div>
-                <button type="submit" class="btn-primary">Add Experience</button>
-            </form>
-        </main>
-        <% include ../partials/footer %>
-</body>
+      <div class="page-container" style="max-width:640px;">
+        <div class="page-header" style="text-align:center;">
+          <h2 class="page-title">Add a New Experience</h2>
+          <p class="page-subtitle">Host an unforgettable activity or tour in your city</p>
+        </div>
 
+        <div class="animate-fade-in-up"
+          style="background:var(--bg-primary); border-radius:var(--radius-md); padding:32px; box-shadow:var(--shadow-md); border:1px solid var(--border-light);">
+          <form action="/experiences/add" method="POST">
+            <div class="form-group">
+              <label class="form-label">Title</label>
+              <input type="text" id="title" name="title" class="form-input" placeholder="e.g. Sunset Kayaking & Seafood Dinner" required />
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Host Name</label>
+                <input type="text" id="host" name="host" class="form-input" placeholder="e.g. Captain Rohan" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Category</label>
+                <select id="category" name="category" class="form-input" required>
+                  <option value="Adventure">Adventure</option>
+                  <option value="Food & Drink">Food & Drink</option>
+                  <option value="Art & Culture">Art & Culture</option>
+                  <option value="Wellness">Wellness</option>
+                  <option value="Nature">Nature</option>
+                  <option value="Music">Music</option>
+                  <option value="Sports">Sports</option>
+                  <option value="Nightlife">Nightlife</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Price per person (₹)</label>
+                <input type="number" id="price" name="price" step="1" min="1" class="form-input" placeholder="1500" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Duration</label>
+                <input type="text" id="duration" name="duration" class="form-input" placeholder="e.g. 2.5 hours" required />
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" id="location" name="location" class="form-input" placeholder="e.g. Goa, India" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Rating (0 - 5)</label>
+                <input type="number" id="rating" name="rating" min="0" max="5" step="0.1" value="4.8" class="form-input" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Photo URL</label>
+              <input type="url" id="photoUrl" name="photoUrl" class="form-input" placeholder="https://images.example.com/kayak.jpg" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea id="description" name="description" rows="4" class="form-input" placeholder="Describe what guests will do, what's included, and what to bring..." required></textarea>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center;">
+              <div class="form-group">
+                <label class="form-label">Max Guests</label>
+                <input type="number" id="maxGuests" name="maxGuests" min="1" max="100" value="10" class="form-input" required />
+              </div>
+              <div class="form-group" style="margin-top:24px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;">
+                  <input type="checkbox" id="isPopular" name="isPopular" style="width:18px;height:18px;accent-color:var(--primary);" />
+                  <span>Mark as Guest Favourite</span>
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" style="padding:14px; margin-top:16px;">
+              Publish Experience
+            </button>
+          </form>
+        </div>
+      </div>
+
+    <%- include('../partials/footer') %>
+  </body>
 </html>

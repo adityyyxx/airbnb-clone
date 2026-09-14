@@ -2,18 +2,37 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 
 exports.getLogin = (req, res, next) => {
+  let errorMessage = null;
+  if (req.query.error === 'auth_failed') {
+    errorMessage = 'Google authentication was cancelled or failed. Please try again.';
+  } else if (req.query.error === 'no_user') {
+    errorMessage = 'No user profile was returned by Google. Please try again.';
+  }
+
   res.render("auth/login", {
     pageTitle: "Login",
     currentPage: "login",
     isLoggedIn: false,
     userRole: null,
     userName: null,
-    errorMessage: null
+    errorMessage
   });
 };
 
 exports.postLogin = (req, res, next) => {
-  const { username, password } = req.body;
+  const username = typeof req.body?.username === 'string' ? req.body.username.trim() : '';
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+  if (!username || !password) {
+    return res.render("auth/login", {
+      pageTitle: "Login",
+      currentPage: "login",
+      isLoggedIn: false,
+      userRole: null,
+      userName: null,
+      errorMessage: "Please enter both your username/email and password."
+    });
+  }
 
   User.findOne({ 
     $or: [
@@ -29,6 +48,17 @@ exports.postLogin = (req, res, next) => {
         userRole: null,
         userName: null,
         errorMessage: "No account found with that username or email."
+      });
+    }
+
+    if (!user.password) {
+      return res.render("auth/login", {
+        pageTitle: "Login",
+        currentPage: "login",
+        isLoggedIn: false,
+        userRole: null,
+        userName: null,
+        errorMessage: "This account was registered using Google Sign-In. Please click 'Continue with Google'."
       });
     }
 
@@ -48,13 +78,31 @@ exports.postLogin = (req, res, next) => {
       req.session.userId = user._id;
       req.session.userRole = user.role;
       req.session.userName = user.username;
-      req.session.save(() => {
+      req.session.save((err) => {
+        if (err) console.error("Session save error:", err);
         res.redirect("/");
+      });
+    }).catch(compareErr => {
+      console.error("Password comparison error:", compareErr);
+      res.render("auth/login", {
+        pageTitle: "Login",
+        currentPage: "login",
+        isLoggedIn: false,
+        userRole: null,
+        userName: null,
+        errorMessage: "An error occurred while verifying credentials. Please try again."
       });
     });
   }).catch(err => {
-    console.log("Login error: ", err);
-    res.redirect("/login");
+    console.error("Login database error: ", err);
+    res.render("auth/login", {
+      pageTitle: "Login",
+      currentPage: "login",
+      isLoggedIn: false,
+      userRole: null,
+      userName: null,
+      errorMessage: "An unexpected error occurred. Please try again later."
+    });
   });
 };
 
@@ -70,9 +118,23 @@ exports.getSignup = (req, res, next) => {
 };
 
 exports.postSignup = (req, res, next) => {
-  const { username, email, password, confirmPassword } = req.body;
+  const username = typeof req.body?.username === 'string' ? req.body.username.trim() : '';
+  const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  const confirmPassword = typeof req.body?.confirmPassword === 'string' ? req.body.confirmPassword : '';
 
-  if (password !== confirmPassword) {
+  if (!username || !email || !password) {
+    return res.render("auth/signup", {
+      pageTitle: "Sign Up",
+      currentPage: "signup",
+      isLoggedIn: false,
+      userRole: null,
+      userName: null,
+      errorMessage: "All fields are required."
+    });
+  }
+
+  if (confirmPassword && password !== confirmPassword) {
     return res.render("auth/signup", {
       pageTitle: "Sign Up",
       currentPage: "signup",
@@ -133,46 +195,75 @@ exports.postSignup = (req, res, next) => {
           });
         }
 
-      return bcrypt.hash(password, 12).then(hashedPassword => {
-        const user = new User({
-          username: username.toLowerCase(),
-          email: email.toLowerCase(),
-          password: hashedPassword,
-          role: 'user'
+        return bcrypt.hash(password, 12).then(hashedPassword => {
+          const user = new User({
+            username: username.toLowerCase(),
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            role: 'user'
+          });
+          return user.save();
+        }).then(user => {
+          req.session.isLoggedIn = true;
+          req.session.userId = user._id;
+          req.session.userRole = user.role;
+          req.session.userName = user.username;
+          req.session.save((saveErr) => {
+            if (saveErr) console.error("Session save error on signup:", saveErr);
+            res.redirect("/");
+          });
         });
-        return user.save();
-      }).then(user => {
-        req.session.isLoggedIn = true;
-        req.session.userId = user._id;
-        req.session.userRole = user.role;
-        req.session.userName = user.username;
-        req.session.save(() => {
-          res.redirect("/");
-        });
-      });
       });
     }).catch(err => {
-      console.log("Signup error: ", err);
-      res.redirect("/signup");
+      console.error("Signup error: ", err);
+      res.render("auth/signup", {
+        pageTitle: "Sign Up",
+        currentPage: "signup",
+        isLoggedIn: false,
+        userRole: null,
+        userName: null,
+        errorMessage: "An error occurred during signup. Please try again."
+      });
     });
 };
 
 exports.postLogout = (req, res, next) => {
-  req.session.destroy(() => {
-    res.redirect("/");
-  });
+  const performDestroy = () => {
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) console.error("Session destruction error:", err);
+        res.clearCookie('connect.sid');
+        res.redirect("/");
+      });
+    } else {
+      res.clearCookie('connect.sid');
+      res.redirect("/");
+    }
+  };
+
+  if (typeof req.logout === 'function') {
+    req.logout((err) => {
+      if (err) console.error("Passport logout error:", err);
+      performDestroy();
+    });
+  } else {
+    performDestroy();
+  }
 };
 
 exports.googleAuthCallback = (req, res, next) => {
-    // Passport adds the user object to req.user after successful authentication
-    const user = req.user;
-    
-    req.session.isLoggedIn = true;
-    req.session.userId = user._id;
-    req.session.userRole = user.role;
-    req.session.userName = user.username;
-    
-    req.session.save(() => {
-        res.redirect("/");
-    });
+  const user = req.user;
+  if (!user) {
+    return res.redirect("/login?error=auth_failed");
+  }
+
+  req.session.isLoggedIn = true;
+  req.session.userId = user._id;
+  req.session.userRole = user.role;
+  req.session.userName = user.username;
+  
+  req.session.save((err) => {
+    if (err) console.error("Session save error on Google auth:", err);
+    res.redirect("/");
+  });
 };
