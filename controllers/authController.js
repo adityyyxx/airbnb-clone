@@ -265,8 +265,8 @@ exports.googleAuthCallback = (req, res, next) => {
 
   req.session.isLoggedIn = true;
   req.session.userId = user._id;
-  req.session.userRole = user.role;
-  req.session.userName = user.username;
+  req.session.userRole = user.role || 'user';
+  req.session.userName = user.username || (user.email ? user.email.split('@')[0] : 'User');
   
   req.session.save((err) => {
     if (err) console.error("Session save error on Google auth:", err);
