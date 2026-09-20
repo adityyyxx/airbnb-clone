@@ -34,10 +34,13 @@ exports.postLogin = (req, res, next) => {
     });
   }
 
+  const cleanUsername = username.trim();
+  const usernameRegex = new RegExp('^' + cleanUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+
   User.findOne({ 
     $or: [
-      { username: username.toLowerCase() }, 
-      { email: username.toLowerCase() }
+      { username: usernameRegex }, 
+      { email: usernameRegex }
     ] 
   }).then(user => {
     if (!user) {

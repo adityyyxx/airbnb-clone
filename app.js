@@ -159,6 +159,10 @@ const store = new MongoDBStore({
   collection: 'sessions'
 });
 
+store.on('error', function(error) {
+  console.error('MongoDB Session Store Error:', error);
+});
+
 app.use(trackMiddleware('Session middleware', session({
   secret: process.env.SESSION_SECRET || "KnowledgeGate AI with Complete Coding",
   resave: false,
@@ -177,10 +181,11 @@ app.use(trackMiddleware('Passport session', passport.session()));
 
 app.use((req, res, next) => {
   const start = performance.now();
-  req.isLoggedIn = req.session ? req.session.isLoggedIn || false : false;
-  req.userRole = req.session ? req.session.userRole || null : null;
-  req.userName = req.session ? req.session.userName || null : null;
-  req.userId = req.session ? req.session.userId || null : null;
+  const passportUser = req.user;
+  req.isLoggedIn = (req.session && req.session.isLoggedIn) || Boolean(req.isAuthenticated && req.isAuthenticated()) || false;
+  req.userRole = (req.session && req.session.userRole) || (passportUser && passportUser.role) || null;
+  req.userName = (req.session && req.session.userName) || (passportUser && (passportUser.username || passportUser.name)) || null;
+  req.userId = (req.session && req.session.userId) || (passportUser && (passportUser._id || passportUser.id)) || null;
   
   // Make available to all EJS templates
   res.locals.userRole = req.userRole;
