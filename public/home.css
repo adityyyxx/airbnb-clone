@@ -1103,7 +1103,7 @@ textarea.form-input {
   background: var(--border-light);
 }
 
-/* ── 404 Page ── */
+/* ── 401 Page ── */
 .error-page {
   min-height: calc(100vh - var(--nav-height));
   display: flex;

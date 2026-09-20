@@ -18,6 +18,7 @@ const authRouter = require("./routes/authRouter");
 const serviceRouter = require("./routes/serviceRouter");
 const experienceRouter = require("./routes/experienceRouter");
 const paymentRouter = require("./routes/paymentRouter");
+const hostController = require("./controllers/hostController");
 const rootDir = require("./utils/pathUtil");
 const errorsController = require("./controllers/errors");
 const passport = require('./utils/passport-config');
@@ -203,6 +204,19 @@ app.use(authRouter);
 app.use(storeRouter);
 app.use("/services", serviceRouter);
 app.use("/experiences", experienceRouter);
+
+// /admin authentication & authorization middleware
+app.use("/admin", (req, res, next) => {
+  if (!req.isLoggedIn) {
+    return res.status(401).send("401 Unauthorized: Please log in.");
+  }
+  if (req.userRole !== 'admin') {
+    return res.status(403).send("403 Forbidden: Admin access required.");
+  }
+  next();
+});
+app.get("/admin", hostController.getHostHomes);
+
 app.use("/host", (req, res, next) => {
   if (req.isLoggedIn && req.userRole === 'admin') {
     next();
