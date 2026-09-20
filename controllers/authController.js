@@ -35,10 +35,13 @@ exports.postLogin = (req, res, next) => {
   }
 
   const cleanUsername = username.trim();
+  const lowerUsername = cleanUsername.toLowerCase();
   const usernameRegex = new RegExp('^' + cleanUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
 
   User.findOne({ 
     $or: [
+      { username: lowerUsername },
+      { email: lowerUsername },
       { username: usernameRegex }, 
       { email: usernameRegex }
     ] 
